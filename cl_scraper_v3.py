@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from pymongo import MongoClient 
 from pymongo.errors import DuplicateKeyError, CollectionInvalid
 import datetime as dt 
-from sys import exit   
+import sys 
 
 try: 
     import stem
@@ -22,28 +22,23 @@ def requests_get_trycatch(url):
     
     try:
         r = requests.get(url) 
-        if r.status_code == 404:    
-            pass 
-        if r.status_code == 403: 
-            reconfigure_ip()
-    except: 
+        #r.raise_for_status() raises a requests.exceptions.HTTPError 
+        if r.raise_for_status() == 403: #CL blocked me :( 
+            #reconfigure IP using TOR 
+            pass
+    except requests.exceptions.ConnectionError:
         #pause/prompt terminal to continue
-        print 'Connection interrupted' 
+        print 'Connection interupted. URL:{}'.format(url)
         cont = input('Enter Y/N to continue: ')
         if cont in ['Y', 'y']:
-            r = request_get_trycatch(url)
+            pass
         else:
-            exit()
 
     return r 
-
-def reconfigure_ip(): 
-    print 'reconfigured ip' 
-    pass 
         
 
 def load_dicts(): 
-    with open('categories_mini.json') as fp:
+    with open('categories.json') as fp:
         categories = json.load(fp)
     with open('locations.json') as fp:
         locations = json.load(fp) 
