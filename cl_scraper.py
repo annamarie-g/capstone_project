@@ -1,4 +1,5 @@
 import requests 
+o
 import threading as th
 from multiprocessing import Pool 
 from multiprocessing.dummy import Pool as ThreadPool 
@@ -7,9 +8,6 @@ import itertools
 from bs4 import BeautifulSoup 
 from pymongo import MongoClient 
 import pip 
-import shelve
-import copy 
-import Queue
 import json
 
 try:    
@@ -28,53 +26,78 @@ scrape_locations_concurrent > use multiprocessing to scrape locations
             >scrape_posting 
                 >export to mongo 
 '''
-'''
-def access_dicts(): 
-    #import pdb; pdb.set_trace()
-    locations_serialized = shelve.open('locations.db', flag='r')
-    categories_serialized = shelve.open('categories.db', flag='r') 
-    locations = copy.deepcopy(dict(locations_serialized))
-    categories = copy.deepcopy(dict(categories_serialized))
-    #locations_serialized.close()
-    #categories_serialized.close() 
-    return locations, categories 
-'''
 
-def access_dicts(): 
+def load_dicts(): 
     with open('categories.json') as fp:
         categories = json.load(fp)
     with open('locations.json') as fp:
         locations = json.load(fp) 
+        
     return locations, categories 
 
+'''
 def scrape_locations_concurrent(locations, categories): 
     pool  = Pool(cpu_count())
     location_tuples = [(k,i) for k,v in locations.iteritems() for i in v]
-    pool.map(scrape_categories, itertools.izip(location_tuples, itertools.repeat(categories)))
+    import pdb; pdb.set_trace()
+    job_args = list(itertools.izip(location_tuples, itertools.repeat(categories))) 
+    pool.map(scrape_categories_helper, job_args)
     pool.close()
     pool.join()
+'''
+
+def scrape_locations_iterative(locations, categories): 
+    location_tuples = [(k,i) for k,v in locations.iteritems() for i in v]
+    category_tuples = [(k,v) for k,v in categories.iteritems()]
+
+    for location_tuple in location_tuples: 
+        print 'scraping: {}'.format(location_tuple[0])
+        for category_tuple in category_tuples: 
+            print 'scraping: {}'.format(category_tuple[0])
+            scrape_category(location_tuple, category_tuple) 
+
+'''
+def scrape_categories_helper(args):
+    #takes tuple input and calls function 
+    scrape_categories(*args) 
 
 def scrape_categories(location_tuple, categories):
     category_tuples = [(k,v) for k,v in categories.iteritems()]
     for category_tuple in category_tuples:
         scrape_category(location_tuple, category_tuple) 
-    
+'''
+
+
 def scrape_category(location_tuple, category_tuple): 
     location_href = location_tuple[1][1]
     base_url = '{}/search/{}'.format(location_href, category_tuple[0]) 
     #Build list of urls 
     urls = ['{}?s={}'.format(base_url, page_index) for page_index in range(2400, -100, -100)]
     for url in urls: 
+        print 'scraping: {}'.format()
         item_hrefs = scrape_category_page(url)
-        scrape_hrefs_concurrent(location_tuple, category_tuple, item_hrefs) 
+        scrape_hrefs_sequential(location_tuple, category_tuple, item_hrefs) 
 
+'''
 def scrape_hrefs_concurrent(location_tuple, category_tuple, item_hrefs): 
     location_href = location_tuple[1][1] 
     item_urls = [location_href + href for href in item_hrefs]
     #Build worker pool 
     thread_pool = ThreadPool(cpu_count())
-    thread_pool.map(scrape_posting, itertools.izip(itertools.repeat(location_tupe),itertools.repeat(category_tuple), item_urls))
-        
+    thread_pool.map(href_helper, list(itertools.izip(itertools.repeat(location_tuple),itertools.repeat(category_tuple), item_urls)))
+    thread_pool.close()
+    thread_pool.join()        
+
+def href_helper(args):
+    scrape_posting(*args) 
+'''
+
+def scrape_hrefs_sequential(location_tuple, category_tuple, item_hrefs): 
+    location_href = location_tuple[1][1] 
+    item_urls = [location_href + href for href in item_hrefs]
+    for url in item_urls: 
+        print  scrape_posting(location_tuple, category_tuple, url) 
+
 def scrape_posting(location_tuple, category_tuple, url): 
     resp = requests.get(url) 
     soup = BeautifulSoup(resp.content).find('section', {'class':'body'})
@@ -88,28 +111,27 @@ def scrape_posting(location_tuple, category_tuple, url):
     post_dict['title'] = soup.find('span', {'class':'postingtitletext'}).text 
     post_dict['neighborhood'] = soup.find('span', {'class':'postingtitletext'}).findNext().text 
     post_dict['num_thumbnails'] = len(soup.find('div', {'id':'thumbs'}).find_all('a'))
-    post_dict['latitude'] = float(soup.find('div', {'id':'map'})['data-latitude'])
-    post_dict['longitude'] = float(soup.find('div', {'id':'map'})['data-longitude'])
+    post_dict['latitude'] = soup.find('div', {'id':'map'})['data-latitude']
+    post_dict['longitude'] = soup.find('div', {'id':'map'})['data-longitude']
     post_dict['user_id'] = soup.find('span', {'class':'otherpostings'}).find('a')['href'][19:]
     post_dict['post_body'] = soup.find('section', {'id':'postingbody'}).text
     post_dict['notices'] = [notice.text for notice in soup.find('ul', {'class':'notices'}).find_all('li')]
-   
+    
+    return post_dict 
+
 '''
 def category_scrape_sequential(location, category): 
-    queue = Queue.Queue() 
     location_href = location[1]
     item_hrefs_category = []
     base_url = '{}/search/{}'.format(location_href, category) 
     for page_index in range(2400, -100, -100): 
         url = '{}?s={}'.format(base_url, page_index) 
-        scrape_category_page(url, queue)
-    while not queue.empty():
-        item_hrefs_category.extend(queue.get())
-''' 
+        item_hrefs_category.extend(scrape_category_page(url))  
+'''
 
+'''
 def threadpool_category_scrape_concurrent(location, category): 
-    '''collects all item links in given location and category
-    '''
+    #collects all item links in given location and category
     item_hrefs_category = []
     location_href = location[1]
     base_url = '{}/search/{}'.format(location_href, category) 
@@ -117,8 +139,11 @@ def threadpool_category_scrape_concurrent(location, category):
     urls = ['{}?s={}'.format(base_url, page_index) for page_index in range(2400, -100, -100)]
     #Build worker pool 
     thread_pool = ThreadPool(cpu_count())
-    items_hrefs_category = thread_pool.map(scrape_category_page, urls) 
+    thread_pool.map(scrape_category_page, urls) 
+    thread_pool.close()
+    thread_pool.join()
     return item_hrefs_category
+'''
 
 def scrape_category_page(url):
     resp = requests.get(url) 
@@ -131,11 +156,9 @@ def export_to_mongo():
     pass 
 
 if __name__=='__main__':
-
    
     #locations = {u'State': [(u'location name', u'location url')...]
     #categories = {'xxx': u'category name - by owner(dealer)'}}
-    import pdb; pdb.set_trace()
-    locations, categories = access_dicts()
-    threadpool_category_scrape_concurrent(locations.values()[10][0], categories.keys()[0])
-    
+    locations, categories = load_dicts()
+    #category_scrape_sequential(locations.values()[10][0], categories.keys()[0])
+    scrape_locations_iterative(locations, categories)
