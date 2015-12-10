@@ -11,6 +11,7 @@ from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError, CollectionInvalid
 import datetime as dt 
 from sys import exit   
+from functools import partial 
 
 try: 
     import stem
@@ -22,16 +23,18 @@ def requests_get_trycatch(url):
     
     try:
         r = requests.get(url) 
+        #not a valid url 
         if r.status_code == 404:    
-            pass 
+            return False 
         if r.status_code == 403: 
             reconfigure_ip()
     except: 
+        import pdb; pdb.set_trace()
         #pause/prompt terminal to continue
         print 'Connection interrupted' 
-        cont = input('Enter Y/N to continue: ')
+        cont = raw_input('Enter Y/N to continue: ')
         if cont in ['Y', 'y']:
-            r = request_get_trycatch(url)
+            r = requests_get_trycatch(url)
         else:
             exit()
 
@@ -43,7 +46,7 @@ def reconfigure_ip():
         
 
 def load_dicts(): 
-    with open('categories_mini.json') as fp:
+    with open('categories.json') as fp:
         categories = json.load(fp)
     with open('locations.json') as fp:
         locations = json.load(fp) 
@@ -67,6 +70,8 @@ def posting_urls(location_tuple, category_tuple, item_hrefs):
 
 def scrape_category_page(url):
     resp = requests_get_trycatch(url) 
+    if not resp: #URL not valid  
+        return []
     soup = BeautifulSoup(resp.content)
     items = soup.find_all('a', {'class':'i'}, href=True)
     #if href contains craigslist them it is a redirect to a posting at another location 
@@ -77,6 +82,10 @@ def scrape_category_page(url):
 def scrape_posting(location_tuple, category_tuple, url): 
     post_dict = defaultdict()
     resp = requests_get_trycatch(url)
+        #check if valid URL 
+    if not resp: 
+        return post_dict
+            
     soup = BeautifulSoup(resp.content)
 
     repost_index = soup.text.find('repost_of = ')
@@ -173,7 +182,14 @@ def scrape_posting(location_tuple, category_tuple, url):
 
     return post_dict 
     
-    
+def scrape_category_pages_concurrent(cat_page_urls):
+    cat_threadpool = ThreadPool(4)
+    results = cat_threadpool.map(scrape_category_page, cat_page_urls)
+    cat_threadpool.close()
+    cat_threadpool.join() 
+    print results 
+    return results 
+
 def scrape_sequentially(location_tuples, category_tuples): 
     '''Iteratively scrapes all postings for each location/category pair
     '''
@@ -181,12 +197,12 @@ def scrape_sequentially(location_tuples, category_tuples):
         for category_tuple in category_tuples:
             cat_page_urls = category_page_urls(location_tuple, category_tuple) 
             for page_url in cat_page_urls: 
-                cat_item_hrefs = scrape_category_page(page_url)
+                cat_item_hrefs = scrape_category_pages concurrent(page_url)
                 post_urls = posting_urls(location_tuple, category_tuple, cat_item_hrefs)
                 for post_url in post_urls: 
                     posting_dictionary = scrape_posting(location_tuple, category_tuple, post_url)
                     table.insert_one(posting_dictionary) 
-                    print 'inserted for {}, {}'.format(posting_dictionary['location'], posting_dictionary['title'].encode('utf8')) 
+                    print 'inserted for {}, {}'.format(posting_dictionary['location'], posting_dictionary.get('title', '').encode('utf8')) 
                     
 
 
@@ -194,9 +210,8 @@ if __name__=='__main__':
     #Define the MongoDB database and table 
     db_client = MongoClient()
     db = db_client['cl_scrape']
-    table = db['postings']
+    table = db['threading']
 
     location_tuples, category_tuples = load_dicts()     
-    location_tuples = location_tuples[:10]
     scrape_sequentially(location_tuples, category_tuples) 
     

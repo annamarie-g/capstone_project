@@ -44,11 +44,11 @@ def reconfigure_ip():
     pass 
         
 
-def load_dicts(): 
-    with open('categories.json') as fp:
-        categories = json.load(fp)
-    with open('locations.json') as fp:
-        locations = json.load(fp) 
+def load_dicts(location_dict = 'locations.json', category_dict = 'categories.json'): 
+    with open(location_dict) as fp:
+        locations = json.load(fp)
+    with open(category_dict) as fp:
+        categories = json.load(fp) 
 	location_tuples = [(k,i[0], i[1]) for k,v in locations.iteritems() for i in v]
 
     category_tuples = [(k,v) for k,v in categories.iteritems()]
@@ -82,8 +82,8 @@ def scrape_posting(location_tuple, category_tuple, url):
     post_dict = defaultdict()
     resp = requests_get_trycatch(url)
         #check if valid URL 
-        if not resp: 
-            return post_dict
+    if not resp: 
+        return post_dict
             
     soup = BeautifulSoup(resp.content)
 
@@ -197,13 +197,26 @@ def scrape_sequentially(location_tuples, category_tuples):
                     print 'inserted for {}, {}'.format(posting_dictionary['location'], posting_dictionary.get('title', '').encode('utf8')) 
                     
 
+def select_region(): 
+    regions = ['new_england', 'mid_atlantic', 'east_north_central', 'west_north_central', 'south_atlantic', 'east_south_central', 'west_south_central', 'mountain_west', 'pacific_west'] 
+
+    region = ''
+    while region not in regions:
+        print 'Regions:'
+        print regions 
+        region = raw_input('Select Region:')
+    return region 
 
 if __name__=='__main__':
+        
+    region = select_region()
+
     #Define the MongoDB database and table 
     db_client = MongoClient()
     db = db_client['cl_scrape']
-    table = db['postings']
-
-    location_tuples, category_tuples = load_dicts()     
+    table = db[region]
+    #json fp 
+    region_dict_fp = region + '.json' 
+    location_tuples, category_tuples = load_dicts(location_dict = region_dict_fp)     
     scrape_sequentially(location_tuples, category_tuples) 
     

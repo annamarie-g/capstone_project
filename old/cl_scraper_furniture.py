@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from pymongo import MongoClient 
 from pymongo.errors import DuplicateKeyError, CollectionInvalid
 import datetime as dt 
-import sys 
+from sys import exit   
 
 try: 
     import stem
@@ -22,23 +22,30 @@ def requests_get_trycatch(url):
     
     try:
         r = requests.get(url) 
-        #r.raise_for_status() raises a requests.exceptions.HTTPError 
-        if r.raise_for_status() == 403: #CL blocked me :( 
-            #reconfigure IP using TOR 
-            pass
-    except requests.exceptions.ConnectionError:
+        #not a valid url 
+        if r.status_code == 404:    
+            return False 
+        if r.status_code == 403: 
+            reconfigure_ip()
+    except: 
+        import pdb; pdb.set_trace()
         #pause/prompt terminal to continue
-        print 'Connection interupted. URL:{}'.format(url)
-        cont = input('Enter Y/N to continue: ')
+        print 'Connection interrupted' 
+        cont = raw_input('Enter Y/N to continue: ')
         if cont in ['Y', 'y']:
-            pass
+            r = requests_get_trycatch(url)
         else:
+            exit()
 
     return r 
+
+def reconfigure_ip(): 
+    print 'reconfigured ip' 
+    pass 
         
 
 def load_dicts(): 
-    with open('categories.json') as fp:
+    with open('categories_mini.json') as fp:
         categories = json.load(fp)
     with open('locations.json') as fp:
         locations = json.load(fp) 
@@ -72,6 +79,10 @@ def scrape_category_page(url):
 def scrape_posting(location_tuple, category_tuple, url): 
     post_dict = defaultdict()
     resp = requests_get_trycatch(url)
+        #check if valid URL 
+        if not resp: 
+            pass
+            
     soup = BeautifulSoup(resp.content)
 
     repost_index = soup.text.find('repost_of = ')
@@ -181,7 +192,7 @@ def scrape_sequentially(location_tuples, category_tuples):
                 for post_url in post_urls: 
                     posting_dictionary = scrape_posting(location_tuple, category_tuple, post_url)
                     table.insert_one(posting_dictionary) 
-                    print 'inserted for {}, {}'.format(posting_dictionary['location'], posting_dictionary['title'].encode('utf8')) 
+                    print 'inserted for {}, {}'.format(posting_dictionary['location'], posting_dictionary.get('title', '').encode('utf8')) 
                     
 
 
