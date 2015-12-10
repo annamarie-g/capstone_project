@@ -8,7 +8,7 @@ def split_dictionary(locations, keys):
     return dict_subset 
 
 if __name__=='__main__':
-    with open('locations.json') as fp: 
+    with open('../locations.json') as fp: 
        locations = json.load(fp) 
 
     new_england = ['Connecticut', 'Maine', 'Massachusetts', 'New Hampshire', 'Rhode Island', 'Vermont']
