@@ -52,10 +52,10 @@ def reconfigure_ip():
     pass 
         
 
-def load_dicts(): 
-    with open('categories.json') as fp:
+def load_dicts(location_dict = 'locations.json', category_dict = 'categories.json'): 
+    with open(category_dict) as fp:
         categories = json.load(fp)
-    with open('locations.json') as fp:
+    with open(location_dict) as fp:
         locations = json.load(fp) 
 	location_tuples = [(k,i[0], i[1]) for k,v in locations.iteritems() for i in v]
 
@@ -112,6 +112,7 @@ def scrape_posting((location_tuple, category_tuple, url)):
         post_dict['repost_of'] = soup.text[repost_value_index:repost_value_index+10]
 
     soup = soup.find('section', {'class':'body'})
+    post_dict['url'] = url 
     post_dict['state'] = location_tuple[0]
     post_dict['location'] = location_tuple[1]
     post_dict['category_code'] = category_tuple[0]
