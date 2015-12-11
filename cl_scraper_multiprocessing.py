@@ -248,6 +248,7 @@ def scrape_concurrent(location_tuples, category_tuples):
 	print location_tuple 
 	for category_tuple in category_tuples:
 	    print category_tuple 
+	    reconfigure_ip() 
 	    cat_page_urls = category_page_urls(location_tuple, category_tuple)
 	    #scrape_category_pages_concurrent gives a nested list [[hrefs pg 1], [hrefs pg 5], [hrefs pg 12], etc] 
 	    cat_item_hrefs = scrape_category_pages_concurrent(cat_page_urls)
