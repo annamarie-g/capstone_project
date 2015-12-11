@@ -29,7 +29,6 @@ def requests_get_trycatch(url):
         if r.status_code == 403: 
             reconfigure_ip()
     except: 
-        import pdb; pdb.set_trace()
         #pause/prompt terminal to continue
         print 'Connection interrupted' 
         cont = raw_input('Enter Y/N to continue: ')
@@ -197,7 +196,7 @@ def scrape_sequentially(location_tuples, category_tuples):
         for category_tuple in category_tuples:
             cat_page_urls = category_page_urls(location_tuple, category_tuple) 
             for page_url in cat_page_urls: 
-                cat_item_hrefs = scrape_category_pages concurrent(page_url)
+                cat_item_hrefs = scrape_category_pages_concurrent(page_url)
                 post_urls = posting_urls(location_tuple, category_tuple, cat_item_hrefs)
                 for post_url in post_urls: 
                     posting_dictionary = scrape_posting(location_tuple, category_tuple, post_url)
@@ -213,5 +212,6 @@ if __name__=='__main__':
     table = db['threading']
 
     location_tuples, category_tuples = load_dicts()     
-    scrape_sequentially(location_tuples, category_tuples) 
+    cat_page_urls = category_page_urls(location_tuples[0], category_tuples[1])
+    results = scrape_category_pages_concurrent(cat_page_urls)
     
