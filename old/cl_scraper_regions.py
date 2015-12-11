@@ -11,8 +11,6 @@ from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError, CollectionInvalid
 import datetime as dt 
 from sys import exit   
-from functools import partial 
-import time 
 
 try: 
     import stem
@@ -21,13 +19,7 @@ except:
     pip.main(['install', 'stem'])
 
 def requests_get_trycatch(url):
-
-    #Reconfigure IP automatically every 10 minutes 
-    #sleep a minute in reconfigure_ip() so you only do it once 
-    #minute_interval = dt.datetime.utcnow().minute%10 
-    #if minute_interval == 0:
-	#reconfigure_ip()    
-
+    
     try:
         r = requests.get(url) 
         #not a valid url 
@@ -36,6 +28,7 @@ def requests_get_trycatch(url):
         if r.status_code == 403: 
             reconfigure_ip()
     except: 
+        import pdb; pdb.set_trace()
         #pause/prompt terminal to continue
         print 'Connection interrupted' 
         cont = raw_input('Enter Y/N to continue: ')
@@ -47,31 +40,19 @@ def requests_get_trycatch(url):
     return r 
 
 def reconfigure_ip(): 
-    #If interval request = True wait a minute to continue     
     print 'reconfigured ip' 
     pass 
         
 
-def load_dicts(): 
-    with open('categories.json') as fp:
-        categories = json.load(fp)
-    with open('locations.json') as fp:
-        locations = json.load(fp) 
+def load_dicts(location_dict = 'locations.json', category_dict = 'categories.json'): 
+    with open(location_dict) as fp:
+        locations = json.load(fp)
+    with open(category_dict) as fp:
+        categories = json.load(fp) 
 	location_tuples = [(k,i[0], i[1]) for k,v in locations.iteritems() for i in v]
 
     category_tuples = [(k,v) for k,v in categories.iteritems()]
     return location_tuples, category_tuples  
-
-def select_region():
-    regions = ['new_england', 'mid_atlantic', 'east_north_central', 'west_north_central', 'south_atlantic', 'east_south_central', 'west_south_central', 'mountain_west', 'pacific_west']
-    
-    region = ''
-    while region not in regions: 
-        print 'Regions:' 
-        print regions
-        region = raw_input('Select Region:')
-    return region 
-
 
 def category_page_urls(location_tuple, category_tuple):
     #Returns list of category page urls for location and category
@@ -97,7 +78,7 @@ def scrape_category_page(url):
     
     return item_hrefs
 
-def scrape_posting((location_tuple, category_tuple, url)): 
+def scrape_posting(location_tuple, category_tuple, url): 
     post_dict = defaultdict()
     resp = requests_get_trycatch(url)
         #check if valid URL 
@@ -192,80 +173,50 @@ def scrape_posting((location_tuple, category_tuple, url)):
         post_dict['post_id'] = postinginfo.find('p', {'class':'postinginfo'}).text.split()[2]
         post_times = postinginfo.find_all('time')
         post_dict['post_time'] = post_times[0]['datetime']
-          
+            
         if len(post_times) > 1: #means post was updated
             post_dict['post_updated_time'] = post_times[1]['datetime']
 
-    post_dict['scrape_time'] = dt.datetime.utcnow().isoformat()
+    post_dict['scrape_time'] = dt.datetime.utcnow()
+
+    return post_dict 
     
-    table.insert_one(post_dict) 
-
-    #print '{}, {} : {} : {}'.format(post_dict['location'], post_dict['state'], post_dict['category_title'], post_dict.get('title', '').encode('utf8'))
-
-def scrape_category_pages_concurrent(cat_page_urls):
-    #creates thread for each of 24 category pages and scrapes item hrefs concurrently
-    cat_threadpool = ThreadPool(4)
-    results = cat_threadpool.map(scrape_category_page, cat_page_urls)
-    cat_threadpool.close()
-    cat_threadpool.join() 
-    #nested list (each list is 100 hrefs)
-    return results 
-
-def scrape_hrefs_concurrent(location_tuple, category_tuple, posting_urls):
-    #takes list of posting urls and scrapes each
-
-    #create list of argument tuples 
-    args = list(itertools.izip(itertools.repeat(location_tuple), itertools.repeat(category_tuple),posting_urls))
-    post_threadpool = ThreadPool(4) 
-    results = post_threadpool.map(scrape_posting,args)  
-    post_threadpool.close()
-    post_threadpool.join() 
-    #scrape_posting inserts into mongo, no need to return 
-
-'''
+    
 def scrape_sequentially(location_tuples, category_tuples): 
-    #Iteratively scrapes all postings for each location/category pair
-  
+    '''Iteratively scrapes all postings for each location/category pair
+    '''
     for location_tuple in location_tuples: 
         for category_tuple in category_tuples:
             cat_page_urls = category_page_urls(location_tuple, category_tuple) 
             for page_url in cat_page_urls: 
-                cat_item_hrefs = scrape_category_pages_concurrent(page_url)
+                cat_item_hrefs = scrape_category_page(page_url)
                 post_urls = posting_urls(location_tuple, category_tuple, cat_item_hrefs)
                 for post_url in post_urls: 
                     posting_dictionary = scrape_posting(location_tuple, category_tuple, post_url)
                     table.insert_one(posting_dictionary) 
                     print 'inserted for {}, {}'.format(posting_dictionary['location'], posting_dictionary.get('title', '').encode('utf8')) 
-'''
+                    
 
-def scrape_concurrent(location_tuples, category_tuples):
-    #Scrapes all postings for each location/category pair
-	#threadpool for scraping 24 category pages 
-	#threadpool for scraping 100 hrefs from category pages
-	
-    for location_tuple in location_tuples:
-	print location_tuple 
-	for category_tuple in category_tuples:
-	    print category_tuple 
-	    cat_page_urls = category_page_urls(location_tuple, category_tuple)
-	    #scrape_category_pages_concurrent gives a nested list [[hrefs pg 1], [hrefs pg 5], [hrefs pg 12], etc] 
-	    cat_item_hrefs = scrape_category_pages_concurrent(cat_page_urls)
-	    for page_of_hrefs in cat_item_hrefs:
-	    	post_urls = posting_urls(location_tuple, category_tuple, page_of_hrefs)
-		#creates threadpool for page of posts and scrapes posting
-	    	scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls) 
-	
+def select_region(): 
+    regions = ['new_england', 'mid_atlantic', 'east_north_central', 'west_north_central', 'south_atlantic', 'east_south_central', 'west_south_central', 'mountain_west', 'pacific_west'] 
+
+    region = ''
+    while region not in regions:
+        print 'Regions:'
+        print regions 
+        region = raw_input('Select Region:')
+    return region 
+
 if __name__=='__main__':
-	
-    #prompt user to select region
+        
     region = select_region()
 
     #Define the MongoDB database and table 
     db_client = MongoClient()
     db = db_client['cl_scrape']
-    table_name = region + ' ' + dt.datetime.utcnow().isoformat()
-    table = db[table_name]
-
+    table = db[region]
+    #json fp 
     region_dict_fp = 'regions/' + region + '.json' 
     location_tuples, category_tuples = load_dicts(location_dict = region_dict_fp)     
-    scrape_concurrent(location_tuples, category_tuples) 	
+    scrape_sequentially(location_tuples, category_tuples) 
+    
