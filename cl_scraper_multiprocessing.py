@@ -13,6 +13,7 @@ import datetime as dt
 from sys import exit   
 from functools import partial 
 import time 
+import os
 
 '''
 try: 
@@ -23,12 +24,6 @@ except:
 '''
 
 def requests_get_trycatch(url):
-
-    #Reconfigure IP automatically every 10 minutes 
-    #sleep a minute in reconfigure_ip() so you only do it once 
-    #minute_interval = dt.datetime.utcnow().minute%10 
-    #if minute_interval == 0:
-	#reconfigure_ip()    
 
     try:
         r = requests.get(url) 
@@ -63,14 +58,18 @@ def load_dicts(location_dict = 'locations.json', category_dict = 'categories.jso
         categories = json.load(fp)
     with open(location_dict) as fp:
         locations = json.load(fp) 
-	location_tuples = [(k,i[0], i[1]) for k,v in locations.iteritems() for i in v]
 
+	location_tuples = [(k,i[0], i[1]) for k,v in locations.iteritems() for i in v]
     category_tuples = [(k,v) for k,v in categories.iteritems()]
+
     return location_tuples, category_tuples  
 
 def select_region():
-    regions = ['new_england', 'mid_atlantic', 'east_north_central', 'west_north_central', 'south_atlantic', 'east_south_central', 'west_south_central', 'mountain_west', 'pacific_west']
-    
+    regions = []
+    for f in os.listdir(os.getcwd() + '/regions'):
+        if f.endswith('.json'):
+            regions.append(f[:-5])
+
     region = ''
     while region not in regions: 
         print 'Regions:' 
@@ -78,6 +77,18 @@ def select_region():
         region = raw_input('Select Region:')
     return region 
 
+def select_category():
+    categories = []
+    for f in os.listdir(os.getcwd() + '/categories'):
+        if f.endswith('.json'):
+            categories.append(f[:-5])
+
+    category  = ''
+    while category not in categories:
+        print 'Categories:'
+        print categories 
+        category = raw_input('Select Category:')
+    return category
 
 def category_page_urls(location_tuple, category_tuple):
     #Returns list of category page urls for location and category
@@ -150,7 +161,7 @@ def scrape_posting((location_tuple, category_tuple, url)):
     else: 
         post_dict['num_images'] = num_images - 1  
 
-    #Latitude and Longitude 
+    #Latitud:e and Longitude 
     map_attributes = soup.find('div', {'id':'map'})
     if map_attributes: 
         post_dict['latitude'] = soup.find('div', {'id':'map'})['data-latitude']
@@ -230,29 +241,12 @@ def scrape_hrefs_concurrent(location_tuple, category_tuple, posting_urls):
     post_threadpool.join() 
     #scrape_posting inserts into mongo, no need to return 
 
-'''
-def scrape_sequentially(location_tuples, category_tuples): 
-    #Iteratively scrapes all postings for each location/category pair
-  
-    for location_tuple in location_tuples: 
-        for category_tuple in category_tuples:
-            cat_page_urls = category_page_urls(location_tuple, category_tuple) 
-            for page_url in cat_page_urls: 
-                cat_item_hrefs = scrape_category_pages_concurrent(page_url)
-                post_urls = posting_urls(location_tuple, category_tuple, cat_item_hrefs)
-                for post_url in post_urls: 
-                    posting_dictionary = scrape_posting(location_tuple, category_tuple, post_url)
-                    table.insert_one(posting_dictionary) 
-                    print 'inserted for {}, {}'.format(posting_dictionary['location'], posting_dictionary.get('title', '').encode('utf8')) 
-'''
 
 def scrape_concurrent(location_tuples, category_tuples):
     #Scrapes all postings for each location/category pair
 	#threadpool for scraping 24 category pages 
 	#threadpool for scraping 100 hrefs from category pages
 
-    #get all urls from region??!? 
-    region_urls = [] 
     for location_tuple in location_tuples:
 	print location_tuple 
 	for category_tuple in category_tuples:
@@ -261,22 +255,29 @@ def scrape_concurrent(location_tuples, category_tuples):
 	    #scrape_category_pages_concurrent gives a nested list [[hrefs pg 1], [hrefs pg 5], [hrefs pg 12], etc] 
 	    cat_item_hrefs = scrape_category_pages_concurrent(cat_page_urls)
 	    for page_of_hrefs in cat_item_hrefs:
-	    	region_urls.extend(posting_urls(location_tuple, category_tuple, page_of_hrefs))
-		#creates threadpool for page of posts and scrapes posting
-	    	#scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls) 
-		#print 'number of postings: ' + str(table.count())
+            post_urls = posting_urls(location_tuple, category_tuple, page_of_hrfs)
+		    #creates threadpool for page of posts and scrapes posting
+	    	scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls) 
+		    print 'number of postings: ' + str(table.count())
 	
 if __name__=='__main__':
 	
     #prompt user to select region
     region = select_region()
+    category = select_category() 
 
     #Define the MongoDB database and table 
     db_client = MongoClient()
-    db = db_client['cl_scrape']
-    table_name = region + ' ' + dt.datetime.utcnow().isoformat()
+    db_name = 'cl_scrape' 
+    db = db_client[db_name]
+    table_name = '_'.join([region, category, dt.date.today().isoformat()[-5:]]) 
     table = db[table_name]
 
     region_dict_fp = 'regions/' + region + '.json' 
-    location_tuples, category_tuples = load_dicts(location_dict = region_dict_fp)     
+    category_dict_fp = 'categories/' + category + '.json' 
+    location_tuples, category_tuples = load_dicts(location_dict = region_dict_fp, category_dict = category_dict_fp)     
     scrape_concurrent(location_tuples, category_tuples) 	
+
+    #export table to mongo after scrape
+    output_fp = table_name + '.json'
+    os.system('mongoexport --db {} --collection {} --jsonArray --out {}'.format(db_name, table_name, output_fp))
