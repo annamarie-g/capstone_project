@@ -279,5 +279,5 @@ if __name__=='__main__':
     scrape_concurrent(location_tuples, category_tuples) 	
 
     #export table to mongo after scrape
-    output_fp = table_name + '.json'
+    output_fp = 'data/loc_cat_scrape/table_name' + '.json'
     os.system('mongoexport --db {} --collection {} --jsonArray --out {}'.format(db_name, table_name, output_fp))
