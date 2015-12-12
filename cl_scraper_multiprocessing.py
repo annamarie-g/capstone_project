@@ -80,7 +80,7 @@ def requests_get_trycatch(url, session, num_attempts = 0):
         #not a valid url 
         if r.status_code == 404:    
             print 'not a valid url: {}'.format(url)
-            cont = raw_input('Press Enter to continue...']
+            raw_input('Press Enter to continue...')
         if r.status_code == 403: 
             print 'You are blocked on {}:{}'.format(new_ip, new_port)
             #when get_new_proxy is called it will check to see if the session proxy is di
@@ -152,7 +152,8 @@ def posting_urls(location_tuple, category_tuple, item_hrefs):
 	item_urls = [location_href + href for href in item_hrefs]
 	return item_urls 
 
-def scrape_category_page(url, session):
+def scrape_category_page(url):
+    session = requesocks.session()
     resp = requests_get_trycatch(url, session) 
     if not resp: #URL not valid  
         return []
@@ -164,9 +165,10 @@ def scrape_category_page(url, session):
     return item_hrefs
 
 def scrape_posting((location_tuple, category_tuple, url)): 
+    session = requesocks.session()
     time.sleep(1)
     post_dict = defaultdict()
-    resp = requests_get_trycatch(url)
+    resp = requests_get_trycatch(url, session)
         #check if valid URL 
     if not resp: 
         return post_dict
@@ -268,13 +270,13 @@ def scrape_posting((location_tuple, category_tuple, url)):
     
     table.insert_one(post_dict) 
 
-    #print '{}, {} : {} : {}'.format(post_dict['location'], post_dict['state'], post_dict['category_title'], post_dict.get('title', '').encode('utf8'))
 
-def scrape_category_pages_concurrent(cat_page_urls, session):
+def scrape_category_pages_concurrent(cat_page_urls):
     #creates thread for each of 24 category pages and scrapes item hrefs concurrently
     cat_threadpool = ThreadPool(4)
-    args = list(itertools.izip(cat_page_urls, itertools.repeat(session))
-    results = cat_threadpool.map(scrape_category_page, args)
+    #originally I had a session variable shared among all threads and then I realized I was an idiot 
+    #args = list(itertools.izip(cat_page_urls, itertools.repeat(session)))
+    results = cat_threadpool.map(scrape_category_page, cat_page_urls)
     cat_threadpool.close()
     cat_threadpool.join() 
     #nested list (each list is 100 hrefs)
@@ -298,20 +300,19 @@ def scrape_concurrent(location_tuples, category_tuples):
 	#threadpool for scraping 100 hrefs from category pages
     
     #create a requesocks session that will be shared amongst all threads 
-    session = requesocks.session()
 
     for location_tuple in location_tuples:
-	print location_tuple 
-	for category_tuple in category_tuples:
-	    print category_tuple 
-	    cat_page_urls = category_page_urls(location_tuple, category_tuple)
-	    #scrape_category_pages_concurrent gives a nested list [[hrefs pg 1], [hrefs pg 5], [hrefs pg 12], etc] 
-	    cat_item_hrefs = scrape_category_pages_concurrent(cat_page_urls, session)
-	    for page_of_hrefs in cat_item_hrefs:
-            post_urls = posting_urls(location_tuple, category_tuple, page_of_hrfs)
-		    #creates threadpool for page of posts and scrapes posting
-	    	scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls, session) 
-		    print 'number of postings: ' + str(table.count())
+        print location_tuple 
+        for category_tuple in category_tuples:
+            print category_tuple 
+            cat_page_urls = category_page_urls(location_tuple, category_tuple)
+            #scrape_category_pages_concurrent gives a nested list [[hrefs pg 1], [hrefs pg 5], [hrefs pg 12], etc] 
+            cat_item_hrefs = scrape_category_pages_concurrent(cat_page_urls)
+            for page_of_hrefs in cat_item_hrefs:
+                post_urls = posting_urls(location_tuple, category_tuple, page_of_hrfs)
+                #creates threadpool for page of posts and scrapes posting
+                scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls, session) 
+            print 'number of postings: ' + str(table.count())
 	
 if __name__=='__main__':
 	
