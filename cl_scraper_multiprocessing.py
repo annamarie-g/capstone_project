@@ -254,7 +254,7 @@ def scrape_concurrent(location_tuples, category_tuples):
     for location_tuple in location_tuples:
 	print location_tuple 
 	for category_tuple in category_tuples:
-	    time.sleep(60)
+#	    time.sleep(60)
 	    print category_tuple 
 	    #reconfigure_ip() 
 	    cat_page_urls = category_page_urls(location_tuple, category_tuple)
