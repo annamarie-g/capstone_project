@@ -88,7 +88,7 @@ def requests_get_trycatch(url, session, num_attempts = 0):
             r  = request_get_trycatch(url, session, num_attempts + 1)
 
     except: #this is when there is an issue with the proxy 
-        print 'session.get() request failed on url.'
+        print 'session.get() request failed on url {}'.format(url) 
         test_proxy(session)
 
 
