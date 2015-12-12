@@ -70,7 +70,7 @@ def test_proxy(session):
     try:
         session.get(test_url)
     except: 
-        print 'proxy not working' 
+        print 'session.get(test_url) failed. Proxy not working' 
         get_new_proxy(session) 
         
     
@@ -88,8 +88,8 @@ def requests_get_trycatch(url, session, num_attempts = 0):
             r  = request_get_trycatch(url, session, num_attempts + 1)
 
     except: #this is when there is an issue with the proxy 
-        print 'Request on url {} failed.'
-        test_proxy()
+        print 'session.get() request failed on url.'
+        test_proxy(session)
 
 
     ''' Only need this if scraping on local, AWS will not have connection issues
@@ -268,7 +268,8 @@ def scrape_posting((location_tuple, category_tuple, url)):
 
     post_dict['scrape_time'] = dt.datetime.utcnow().isoformat()
     
-    table.insert_one(post_dict) 
+    return post_dict 
+    # table.insert_one(post_dict) 
 
 
 def scrape_category_pages_concurrent(cat_page_urls):
