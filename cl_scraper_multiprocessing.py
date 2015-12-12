@@ -166,7 +166,7 @@ def scrape_category_page(url):
 
 def scrape_posting((location_tuple, category_tuple, url)): 
     session = requesocks.session()
-    time.sleep(1)
+#    time.sleep(1)
     post_dict = defaultdict()
     resp = requests_get_trycatch(url, session)
         #check if valid URL 
@@ -309,9 +309,9 @@ def scrape_concurrent(location_tuples, category_tuples):
             #scrape_category_pages_concurrent gives a nested list [[hrefs pg 1], [hrefs pg 5], [hrefs pg 12], etc] 
             cat_item_hrefs = scrape_category_pages_concurrent(cat_page_urls)
             for page_of_hrefs in cat_item_hrefs:
-                post_urls = posting_urls(location_tuple, category_tuple, page_of_hrfs)
+                post_urls = posting_urls(location_tuple, category_tuple, page_of_hrefs)
                 #creates threadpool for page of posts and scrapes posting
-                scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls, session) 
+                scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls) 
             print 'number of postings: ' + str(table.count())
 	
 if __name__=='__main__':
