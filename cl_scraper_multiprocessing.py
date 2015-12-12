@@ -44,21 +44,35 @@ def rebuild_proxy_list():
     return proxies 
             
 def get_new_proxy(session): 
-    print 'you are blocked!' 
     print 'Assign new socks5 proxy:' 
     #available_proxies = rebuild_proxy_list()
     #for now I will just manually assign a proxy 
-    
-    #create global variables for new proxy 
+   
+    #Was thinking about assigning globals for new_ip and new_port, but created two sessions in python with different proxies and had them working concurrently, should be fine --- but actually on second thought since I'm manually resetting the proxy I don't want to do that 100,000 times :P
+
     global new_ip
     global new_port 
 
     new_ip = raw_input('Assign new IP:') 
     new_port = raw_input('Assign new PORT:')
     proxy_address = 'socks5://{}:{}'.format(new_ip, new_port) 
+    #reassign global variables to each thread session 
     session.proxies = {'http': proxy_address, 'https': proxy_address}  
 
-    return session 
+    #test proxy 
+    test_proxy(session) 
+
+    return session
+
+def test_proxy(session): 
+    test_url = 'http://burlington.craigslist.org/mcd/5356801043.html'
+    
+    try:
+        session.get(test_url)
+    except: 
+        print 'proxy not working' 
+        get_new_proxy(session) 
+        
     
 def requests_get_trycatch(url, session, num_attempts = 0):
     try:
@@ -68,16 +82,25 @@ def requests_get_trycatch(url, session, num_attempts = 0):
             print 'not a valid url: {}'.format(url)
             cont = raw_input('Press Enter to continue...']
         if r.status_code == 403: 
-            #try again-- sharing the same session across multiple threads    
+            print 'You are blocked on {}:{}'.format(new_ip, new_port)
+            #when get_new_proxy is called it will check to see if the session proxy is di
             session = get_new_proxy(session) 
-            r = request_get_trycatch(url, session, num_attempts + 1)
+            r  = request_get_trycatch(url, session, num_attempts + 1)
 
-    except: 
+    except: #this is when there is an issue with the proxy 
+        print 'Request on url {} failed.'
+        test_proxy()
+
+
+    ''' Only need this if scraping on local, AWS will not have connection issues
         #pause/prompt terminal to continue
         print 'Connection interrupted' 
         cont = raw_input('Press Enter to continue... ')
+    '''
 
-    return r, session 
+    #Once I am able to get a valid response, it doesn't really matter whether I return session because this is the end product for each session variable created  
+    return r 
+
 
 def load_dicts(location_dict = 'locations.json', category_dict = 'categories.json'): 
     with open(category_dict) as fp:
