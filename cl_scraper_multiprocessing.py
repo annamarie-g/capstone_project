@@ -77,19 +77,21 @@ def test_proxy(session):
 def requests_get_trycatch(url, session, num_attempts = 0):
     try:
         r = session.get(url) 
+
+    except: #this is when there is an issue with the proxy 
+
         #not a valid url 
         if r.status_code == 404:    
             print 'not a valid url: {}'.format(url)
             raw_input('Press Enter to continue...')
-        if r.status_code == 403: 
+        elif r.status_code == 403: 
             print 'You are blocked on {}:{}'.format(new_ip, new_port)
             #when get_new_proxy is called it will check to see if the session proxy is di
             session = get_new_proxy(session) 
             r  = request_get_trycatch(url, session, num_attempts + 1)
-
-    except: #this is when there is an issue with the proxy 
-        print 'session.get() request failed on url {}'.format(url) 
-        test_proxy(session)
+	else: 
+            print 'session.get() request failed on url {}'.format(url) 
+            test_proxy(session)
 
 
     ''' Only need this if scraping on local, AWS will not have connection issues
