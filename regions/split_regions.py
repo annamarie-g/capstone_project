@@ -11,16 +11,26 @@ if __name__=='__main__':
     with open('../locations.json') as fp: 
        locations = json.load(fp) 
 
+    texas = ['Texas']
+    california = ['California'] 
     new_england = ['Connecticut', 'Maine', 'Massachusetts', 'New Hampshire', 'Rhode Island', 'Vermont']
     mid_atlantic = ['New Jersey', 'New York', 'Pennsylvania']
     east_north_central = ['Illinois', 'Indiana', 'Michigan', 'Ohio', 'Wisconsin']
     west_north_central = ['Iowa', 'Kansas', 'Minnesota', 'Missouri', 'Nebraska','North Dakota', 'South Dakota']
     south_atlantic = ['Delaware', 'Florida', 'Georgia', 'Maryland', 'North Carolina', 'South Carolina','Virginia', 'District of Columbia', 'West Virginia']
     east_south_central = ['Alabama', 'Kentucky', 'Mississippi', 'Tennessee']
-    west_south_central = ['Arkansas' , 'Louisiana', 'Oklahoma', 'Texas']
+    west_south_central = ['Arkansas' , 'Louisiana', 'Oklahoma']
     mountain_west = ['Arizona', 'Colorado', 'Idaho', 'Montana', 'Nevada', 'New Mexico', 'Utah',  'Wyoming'] 
-    pacific_west = ['Alaska', 'California', 'Hawaii', 'Oregon', 'Washington'] 
+    pacific_west = ['Alaska', 'Hawaii', 'Oregon', 'Washington'] 
 
+
+    with open('california.json', 'wb') as fp:
+        california_locations  = split_dictionary(locations, california)
+        json.dump(california_locations, fp)
+
+    with open('texas.json', 'wb') as fp:
+        texas_locations = split_dictionary(locations, texas)
+        json.dump(texas_locations, fp)
     
     with open('new_england.json', 'wb') as fp:
         new_england_locations = split_dictionary(locations, new_england)

@@ -15,16 +15,18 @@ from functools import partial
 import time 
 import os
 
-'''
+
 try: 
-    import stem
+    import requesocks
 except: 
-    #install Tor controller
-    pip.main(['install', 'stem'])
-'''
+    #install requesocks
+    pip.main(['install', 'requesocks'])
+
+def build_proxy_list():
+    
 
 def requests_get_trycatch(url):
-
+    
     try:
         r = requests.get(url) 
         #not a valid url 
