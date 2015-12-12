@@ -216,7 +216,7 @@ if __name__=='__main__':
     db = db_client['cl_scrape']
     table = db[region]
     #json fp 
-    region_dict_fp = 'regions/' + region + '.json' 
+    region_dict_fp = region + '.json' 
     location_tuples, category_tuples = load_dicts(location_dict = region_dict_fp)     
     scrape_sequentially(location_tuples, category_tuples) 
     
