@@ -40,27 +40,22 @@ def requests_get_trycatch(url):
     except: 
         #pause/prompt terminal to continue
         print 'Connection interrupted' 
-        cont = raw_input('Enter Y/N to continue: ')
-        if cont in ['Y', 'y']:
-            r = requests_get_trycatch(url)
-        else:
-            exit()
+        print url 
+        #cont = raw_input('Enter Y/N to continue: ')
+        #if cont in ['Y', 'y']:
+         #   r = requests_get_trycatch(url)
+        #else:
 
     return r 
-
 
 def reconfigure_ip(): 
     #If interval request = True wait a minute to continue     
     print 'you are blocked' 
-    cont = raw_input('Enter Y/N to continue: ')
-    if cont in ['Y', 'y']:
-       r = requests_get_trycatch(url)
-    pass 
-        
+    quit()
 
 def load_dicts(location_dict = 'locations.json', category_dict = 'categories.json'): 
     with open(category_dict) as fp:
-        categories = json.load(fp)
+		categories = json.load(fp)  
     with open(location_dict) as fp:
         locations = json.load(fp) 
 	location_tuples = [(k,i[0], i[1]) for k,v in locations.iteritems() for i in v]
@@ -95,6 +90,7 @@ def posting_urls(location_tuple, category_tuple, item_hrefs):
 def scrape_category_page(url):
     resp = requests_get_trycatch(url) 
     if not resp: #URL not valid  
+        print 'url not valid: {}'.format(url)
         return []
     soup = BeautifulSoup(resp.content)
     items = soup.find_all('a', {'class':'i'}, href=True)
@@ -246,7 +242,15 @@ def scrape_sequentially(location_tuples, category_tuples):
                     print 'inserted for {}, {}'.format(posting_dictionary['location'], posting_dictionary.get('title', '').encode('utf8')) 
 '''
 
-def scrape_concurrent(location_tuples, category_tuples):
+
+def scrape_category_pages_sequential(cat_page_urls):
+    #href list 
+    hrefs = []
+    for url in cat_page_urls: 
+        hrefs.extend(scrape_category_page(url))
+    return hrefs 
+
+def scrape_sequential_urls(location_tuples, category_tuples):
     #Scrapes all postings for each location/category pair
 	#threadpool for scraping 24 category pages 
 	#threadpool for scraping 100 hrefs from category pages
@@ -257,26 +261,24 @@ def scrape_concurrent(location_tuples, category_tuples):
 	print location_tuple 
 	for category_tuple in category_tuples:
 	    print category_tuple 
-	    cat_page_urls = category_page_urls(location_tuple, category_tuple)
-	    #scrape_category_pages_concurrent gives a nested list [[hrefs pg 1], [hrefs pg 5], [hrefs pg 12], etc] 
-	    cat_item_hrefs = scrape_category_pages_concurrent(cat_page_urls)
-	    for page_of_hrefs in cat_item_hrefs:
-	    	region_urls.extend(posting_urls(location_tuple, category_tuple, page_of_hrefs))
-		#creates threadpool for page of posts and scrapes posting
-	    	#scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls) 
-		#print 'number of postings: ' + str(table.count())
+
+        cat_page_urls = category_page_urls(location_tuple, category_tuple)
+        cat_item_hrefs = scrape_category_pages_sequential(cat_page_urls)	
+        region_urls.extend(posting_urls(location_tuple, category_tuple,cat_item_hrefs))
+        import pdb; pdb.set_trace()
+        print 'number of urls scraped:' + str(len(region_urls))
+        
+    return region_urls 
 	
 if __name__=='__main__':
 	
     #prompt user to select region
     region = select_region()
 
-    #Define the MongoDB database and table 
-    db_client = MongoClient()
-    db = db_client['cl_scrape']
-    table_name = region + ' ' + dt.datetime.utcnow().isoformat()
-    table = db[table_name]
-
     region_dict_fp = 'regions/' + region + '.json' 
     location_tuples, category_tuples = load_dicts(location_dict = region_dict_fp)     
-    scrape_concurrent(location_tuples, category_tuples) 	
+    region_urls = scrape_sequential_urls(location_tuples, category_tuples) 	
+    import pickle 
+    pickle_file = open(region + '_urls.txt', 'wb')
+    pickle.dump(region_urls, pickle_file)
+

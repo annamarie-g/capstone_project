@@ -262,6 +262,7 @@ def scrape_concurrent(location_tuples, category_tuples):
 	    cat_item_hrefs = scrape_category_pages_concurrent(cat_page_urls)
 	    for page_of_hrefs in cat_item_hrefs:
 	    	region_urls.extend(posting_urls(location_tuple, category_tuple, page_of_hrefs))
+            print 'number of urls scraped:' + str(len(region_urls)
 		#creates threadpool for page of posts and scrapes posting
 	    	#scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls) 
 		#print 'number of postings: ' + str(table.count())
@@ -280,3 +281,4 @@ if __name__=='__main__':
     region_dict_fp = 'regions/' + region + '.json' 
     location_tuples, category_tuples = load_dicts(location_dict = region_dict_fp)     
     scrape_concurrent(location_tuples, category_tuples) 	
+    
