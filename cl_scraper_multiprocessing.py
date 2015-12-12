@@ -102,7 +102,7 @@ def requests_get_trycatch(url, session, num_attempts = 0):
     return r 
 
 
-def load_dicts(location_dict = 'locations.json', category_dict = 'categories.json'): 
+def load_dicts(location_dict, category_dict): 
     with open(category_dict) as fp:
         categories = json.load(fp)
     with open(location_dict) as fp:
@@ -324,12 +324,13 @@ if __name__=='__main__':
     db_client = MongoClient()
     db_name = 'cl_scrape' 
     db = db_client[db_name]
-    table_name = '_'.join([region, category, dt.date.today().isoformat()[-5:]]) 
+    table_name = ''.join([region.replace('_', ''), category.replace('_',  ''), dt.date.today().isoformat()[-5:].replace('-', '')]) 
     table = db[table_name]
 
     region_dict_fp = 'regions/' + region + '.json' 
     category_dict_fp = 'categories/' + category + '.json' 
     location_tuples, category_tuples = load_dicts(location_dict = region_dict_fp, category_dict = category_dict_fp)     
+
     scrape_concurrent(location_tuples, category_tuples) 	
 
     #export table to mongo after scrape
