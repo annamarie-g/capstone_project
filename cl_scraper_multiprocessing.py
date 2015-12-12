@@ -14,11 +14,13 @@ from sys import exit
 from functools import partial 
 import time 
 
+'''
 try: 
     import stem
 except: 
     #install Tor controller
     pip.main(['install', 'stem'])
+'''
 
 def requests_get_trycatch(url):
 
@@ -46,9 +48,13 @@ def requests_get_trycatch(url):
 
     return r 
 
+
 def reconfigure_ip(): 
     #If interval request = True wait a minute to continue     
-    print 'reconfigured ip' 
+    print 'you are blocked' 
+    cont = raw_input('Enter Y/N to continue: ')
+    if cont in ['Y', 'y']:
+       r = requests_get_trycatch(url)
     pass 
         
 
@@ -98,6 +104,7 @@ def scrape_category_page(url):
     return item_hrefs
 
 def scrape_posting((location_tuple, category_tuple, url)): 
+    time.sleep(1)
     post_dict = defaultdict()
     resp = requests_get_trycatch(url)
         #check if valid URL 
@@ -247,8 +254,9 @@ def scrape_concurrent(location_tuples, category_tuples):
     for location_tuple in location_tuples:
 	print location_tuple 
 	for category_tuple in category_tuples:
+	    time.sleep(60)
 	    print category_tuple 
-	    reconfigure_ip() 
+	    #reconfigure_ip() 
 	    cat_page_urls = category_page_urls(location_tuple, category_tuple)
 	    #scrape_category_pages_concurrent gives a nested list [[hrefs pg 1], [hrefs pg 5], [hrefs pg 12], etc] 
 	    cat_item_hrefs = scrape_category_pages_concurrent(cat_page_urls)
@@ -256,6 +264,7 @@ def scrape_concurrent(location_tuples, category_tuples):
 	    	post_urls = posting_urls(location_tuple, category_tuple, page_of_hrefs)
 		#creates threadpool for page of posts and scrapes posting
 	    	scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls) 
+		print 'number of postings: ' + str(table.count())
 	
 if __name__=='__main__':
 	
