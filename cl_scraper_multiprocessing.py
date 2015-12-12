@@ -70,7 +70,7 @@ def test_proxy(session):
     try:
         session.get(test_url)
     except: 
-        print 'session.get(test_url) failed. Proxy not working' 
+        print 'session.get(test_url) failed. Proxy not working.' 
         get_new_proxy(session) 
         
     
