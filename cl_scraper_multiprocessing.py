@@ -15,7 +15,6 @@ from functools import partial
 import time 
 import os
 
-
 try: 
     import requesocks
 except: 
@@ -23,26 +22,45 @@ except:
     pip.main(['install', 'requesocks'])
 
 def rebuild_proxy_list():
-    
+    #scraping a website for free socks5 proxies     
+    #returns a list of all the proxies as dicts {'protocol': 'address'} 
+    proxy_list = []
     for i in range(1,4):
-        url = 'http://sockslist.net/list/proxy-socks-5-list/{}#proxylist'.format(str(i)
-        #some of theses proxies work, but some of them are total shit 
+        url = 'http://sockslist.net/list/proxy-socks-5-list/{}#proxylist'.format(str(i))
+        #some of theses proxies work, but some of them are total shit
+        #don't use requests_get_trycatch for this one 
         resp = requests.get(url)
         soup = BeautifulSoup(resp.content)
+        #get IPs 
         ips = [ip.text for ip in soup.find_all('td', {'class':'t_ip'})]
-        ports = 
-
-def get_new_proxy(): 
+        ports_js = [port.text for port in soup.find_all('td', {'class':'t_port'})]
+        ports_padded = [text[text.find('ender^')+6:i+16] for text in ports_js]
+        #get ports 
+        ports = [port.strip() for port in ports_padded] 
+        
+        if len(ip) == len(ports):
+            proxy_list.extend(itertools.izip(ips, ports)) 
+            
+    return proxies 
+            
+def get_new_proxy(session): 
     print 'you are blocked!' 
-    print 'getting new socks5 proxy...' 
-
-    available_proxies = rebuild_proxy_list()
-
-    session.proxies =   
+    print 'Assign new socks5 proxy:' 
+    #available_proxies = rebuild_proxy_list()
+    #for now I will just manually assign a proxy 
     
+    #create global variables for new proxy 
+    global new_ip
+    global new_port 
 
-def requests_get_trycatch(session, url):
-    while #continue until newly assigned proxy is 
+    new_ip = raw_input('Assign new IP:') 
+    new_port = raw_input('Assign new PORT:')
+    proxy_address = 'socks5://{}:{}'.format(new_ip, new_port) 
+    session.proxies = {'http': proxy_address, 'https': proxy_address}  
+
+    return session 
+    
+def requests_get_trycatch(url, session, num_attempts = 0):
     try:
         r = session.get(url) 
         #not a valid url 
@@ -50,17 +68,16 @@ def requests_get_trycatch(session, url):
             print 'not a valid url: {}'.format(url)
             cont = raw_input('Press Enter to continue...']
         if r.status_code == 403: 
-            get_new_proxy(session) 
+            #try again-- sharing the same session across multiple threads    
+            session = get_new_proxy(session) 
+            r = request_get_trycatch(url, session, num_attempts + 1)
+
     except: 
         #pause/prompt terminal to continue
         print 'Connection interrupted' 
         cont = raw_input('Press Enter to continue... ')
-        if cont in ['Y', 'y']:
-            r = requests_get_trycatch(url)
-        else:
-            exit()
 
-    return r 
+    return r, session 
 
 def load_dicts(location_dict = 'locations.json', category_dict = 'categories.json'): 
     with open(category_dict) as fp:
@@ -78,7 +95,7 @@ def select_region():
     for f in os.listdir(os.getcwd() + '/regions'):
         if f.endswith('.json'):
             regions.append(f[:-5])
-
+    
     region = ''
     while region not in regions: 
         print 'Regions:' 
@@ -112,8 +129,8 @@ def posting_urls(location_tuple, category_tuple, item_hrefs):
 	item_urls = [location_href + href for href in item_hrefs]
 	return item_urls 
 
-def scrape_category_page(url):
-    resp = requests_get_trycatch(url) 
+def scrape_category_page(url, session):
+    resp = requests_get_trycatch(url, session) 
     if not resp: #URL not valid  
         return []
     soup = BeautifulSoup(resp.content)
@@ -230,10 +247,11 @@ def scrape_posting((location_tuple, category_tuple, url)):
 
     #print '{}, {} : {} : {}'.format(post_dict['location'], post_dict['state'], post_dict['category_title'], post_dict.get('title', '').encode('utf8'))
 
-def scrape_category_pages_concurrent(cat_page_urls):
+def scrape_category_pages_concurrent(cat_page_urls, session):
     #creates thread for each of 24 category pages and scrapes item hrefs concurrently
     cat_threadpool = ThreadPool(4)
-    results = cat_threadpool.map(scrape_category_page, cat_page_urls)
+    args = list(itertools.izip(cat_page_urls, itertools.repeat(session))
+    results = cat_threadpool.map(scrape_category_page, args)
     cat_threadpool.close()
     cat_threadpool.join() 
     #nested list (each list is 100 hrefs)
@@ -255,6 +273,9 @@ def scrape_concurrent(location_tuples, category_tuples):
     #Scrapes all postings for each location/category pair
 	#threadpool for scraping 24 category pages 
 	#threadpool for scraping 100 hrefs from category pages
+    
+    #create a requesocks session that will be shared amongst all threads 
+    session = requesocks.session()
 
     for location_tuple in location_tuples:
 	print location_tuple 
@@ -262,11 +283,11 @@ def scrape_concurrent(location_tuples, category_tuples):
 	    print category_tuple 
 	    cat_page_urls = category_page_urls(location_tuple, category_tuple)
 	    #scrape_category_pages_concurrent gives a nested list [[hrefs pg 1], [hrefs pg 5], [hrefs pg 12], etc] 
-	    cat_item_hrefs = scrape_category_pages_concurrent(cat_page_urls)
+	    cat_item_hrefs = scrape_category_pages_concurrent(cat_page_urls, session)
 	    for page_of_hrefs in cat_item_hrefs:
             post_urls = posting_urls(location_tuple, category_tuple, page_of_hrfs)
 		    #creates threadpool for page of posts and scrapes posting
-	    	scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls) 
+	    	scrape_hrefs_concurrent(location_tuple, category_tuple, post_urls, session) 
 		    print 'number of postings: ' + str(table.count())
 	
 if __name__=='__main__':
