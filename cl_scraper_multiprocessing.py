@@ -22,38 +22,45 @@ except:
     #install requesocks
     pip.main(['install', 'requesocks'])
 
-def build_proxy_list():
+def rebuild_proxy_list():
+    
+    for i in range(1,4):
+        url = 'http://sockslist.net/list/proxy-socks-5-list/{}#proxylist'.format(str(i)
+        #some of theses proxies work, but some of them are total shit 
+        resp = requests.get(url)
+        soup = BeautifulSoup(resp.content)
+        ips = [ip.text for ip in soup.find_all('td', {'class':'t_ip'})]
+        ports = 
+
+def get_new_proxy(): 
+    print 'you are blocked!' 
+    print 'getting new socks5 proxy...' 
+
+    available_proxies = rebuild_proxy_list()
+
+    session.proxies =   
     
 
-def requests_get_trycatch(url):
-    
+def requests_get_trycatch(session, url):
+    while #continue until newly assigned proxy is 
     try:
-        r = requests.get(url) 
+        r = session.get(url) 
         #not a valid url 
         if r.status_code == 404:    
-            return False 
+            print 'not a valid url: {}'.format(url)
+            cont = raw_input('Press Enter to continue...']
         if r.status_code == 403: 
-            reconfigure_ip()
+            get_new_proxy(session) 
     except: 
         #pause/prompt terminal to continue
         print 'Connection interrupted' 
-        cont = raw_input('Enter Y/N to continue: ')
+        cont = raw_input('Press Enter to continue... ')
         if cont in ['Y', 'y']:
             r = requests_get_trycatch(url)
         else:
             exit()
 
     return r 
-
-
-def reconfigure_ip(): 
-    #If interval request = True wait a minute to continue     
-    print 'you are blocked' 
-    cont = raw_input('Enter Y/N to continue: ')
-    if cont in ['Y', 'y']:
-       r = requests_get_trycatch(url)
-    pass 
-        
 
 def load_dicts(location_dict = 'locations.json', category_dict = 'categories.json'): 
     with open(category_dict) as fp:
