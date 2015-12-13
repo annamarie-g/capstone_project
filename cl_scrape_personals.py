@@ -33,13 +33,13 @@ def requests_get_trycatch(url):
     #Once I am able to get a valid response, it doesn't really matter whether I return session because this is the end product for each session variable created  
     return r 
 
-def write_remaining_to_dict(list_of_tuples):
-    #will just rescrape remaining of category in new scrape 
-    
-
+def write_remaining_to_dict(locations):
+    #will just rescrape remaining of category in new scrape - using locations dictionary that has each location removed as scrape is completed... 
+    #don't need to call this function, 
+	
     #overwrite existing file - will iteratively work its way down
     with open('remaining_locations_to_scrape.json', 'wb') as fp:
-        json.load(remaining_dict, fp) 
+        json.load(locations, fp) 
 
 def load_dicts(location_dict, category_dict): 
     with open(category_dict) as fp:
@@ -251,6 +251,8 @@ def scrape_concurrent(locations, location_tuples, category_tuples):
 
         #remove location_tuple from list if finished scraping location 
         locations[location_tuple[0]].remove([location_tuple[1], location_tuple[2]])
+	write_remaining_to_dict(locations)	
+	
     #finished scrape
     export_table() 
 
