@@ -257,7 +257,7 @@ def scrape_concurrent(locations, location_tuples, category_tuples):
 def export_table():
     #called when scrape is finished, or when scrape gets interrupted 
     #export table to mongo after scrape
-    output_fp = 'data/loc_cat_scrape/table_name' + '.json'
+    output_fp = 'data/loc_cat_scrape/{}'.format(table_name) + '.json'
     os.system('mongoexport --db {} --collection {} --jsonArray --out {}'.format(db_name, table_name, output_fp))
     
 
