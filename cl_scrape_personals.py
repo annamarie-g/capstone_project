@@ -106,11 +106,11 @@ def scrape_category_page(url):
         return []
     soup = BeautifulSoup(resp.content)
     items = soup.find_all('a', {'class':'i'}, href=True)
-    items_with_age = [item['href'] for item in items if (item.find('span') and ('craigslist.org' not in item['href']))]
+   # items_with_age = [item['href'] for item in items if (item.find('span') and ('craigslist.org' not in item['href']))]
     #if href contains craigslist them it is a redirect to a posting at another location 
-    #item_hrefs = [items_with_age['href'] for items_with_age in items_with_age if 'craigslist.org' not in items_with_age['href']]
+    item_hrefs = [item['href'] for item in items if 'craigslist.org' not in items['href']]
     
-    return items_with_age
+    return item_hrefs
 
 def scrape_personals_posting((location_tuple, category_tuple, url)):
     #slight pause 
