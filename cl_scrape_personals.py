@@ -271,6 +271,7 @@ if __name__=='__main__':
     db_client = MongoClient()
     db_name = 'cl_scrape' 
     db = db_client[db_name]
+    global table_name #global so that mongo can export in function, this table name will never change during execution of script 
     table_name = ''.join([region.replace('_', ''), category.replace('_',  ''), dt.date.today().isoformat()[-5:].replace('-', '')]) 
     table = db[table_name]
 
