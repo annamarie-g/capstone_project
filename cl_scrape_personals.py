@@ -116,19 +116,26 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
     #slight pause 
     time.sleep(1)
 
-    import pdb; pdb.set_trace() 
     post_dict = defaultdict() 
     resp = requests_get_trycatch(url)
         #check if valid URL 
     if not resp: 
         return post_dict
 
-    soup = BeautifulSoup(resp.content)
+    soup = BeautifulSoup(resp.text)
 
     repost_index = soup.text.find('repost_of = ')
     if repost_index !=-1:#it is a repost 
         repost_value_index = repost_index + len('repost_of = ')
         post_dict['repost_of'] = soup.text[repost_value_index:repost_value_index+10]
+
+    #grab posting and title before paring down 
+    #Post title 
+    post_dict['title'] = soup.find('meta', {'property':'og:title'})['content'] 
+
+    #Posting Body 
+    post_dict['posting_body'] = soup.find('meta', {'name':'description'})['content'] 
+
 
     soup = soup.find('section', {'class':'body'})
     post_dict['url'] = url 
@@ -137,9 +144,6 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
     post_dict['category_code'] = category_tuple[0]
     post_dict['category_title'] = category_tuple[1] 
 
-    #Post title 
-    post_dict['title'] = soup.find('meta', {'property':'og:title'})['ontent'] 
-        
     title_block  = soup.find('span', {'class':'postingtitletext'})
         
     #if there is a subtitle
@@ -177,9 +181,6 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
                 #add attribute to dictionary 
                 post_dict['ATTR_' + attribute_name] = attribute_value.text 
 
-    #Posting Body 
-    post_dict['posting_body'] = soup.find('meta', {'name':'description'})['content'] 
-
     #Additional Notices 
     notices = soup.find('ul', {'class':'notices'})
     if notices: 
@@ -198,7 +199,6 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
 
     post_dict['scrape_time'] = dt.datetime.utcnow().isoformat()
     
-    return post_dict 
     table.insert_one(post_dict) 
 
 
