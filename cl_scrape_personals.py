@@ -88,9 +88,15 @@ def category_page_urls(location_tuple, category_tuple):
     #get a response to see total page count 
     resp = requests_get_trycatch(base_url)
     soup = BeautifulSoup(resp.content)
-    total = int(soup.find('span', {'class':'totalcount'}).text)
-    upperbnd = total - (total%100)
-    #calculate upper bound of postings so that you only scrape pages that you need to 
+    total_posted = soup.find('span', {'class':'totalcount'})
+    if total_posted: 
+    	total = int(soup.find('span', {'class':'totalcount'}).text)
+    	#calculate upper bound of postings so that you only scrape pages that you need to 
+    	upperbnd = total - (total%100)
+    else: 
+	#upperbnd = 2400 means there are no postings
+	return []
+
     page_urls = ['{}?s={}'.format(base_url, page_index) for page_index in range(upperbnd, -100, -100)]
     return page_urls 
 
@@ -265,6 +271,7 @@ if __name__=='__main__':
     db_client = MongoClient()
     db_name = 'cl_scrape' 
     db = db_client[db_name]
+    global table_name #global so that mongo can export in function, this table name will never change during execution of script 
     table_name = ''.join([region.replace('_', ''), category.replace('_',  ''), dt.date.today().isoformat()[-5:].replace('-', '')]) 
     table = db[table_name]
 
