@@ -138,7 +138,7 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
     post_dict['category_title'] = category_tuple[1] 
 
     #Post title 
-    post_dict['title'] = soup.find('title').text 
+    post_dict['title'] = soup.find('meta', {'property':'og:title'})['ontent'] 
         
     title_block  = soup.find('span', {'class':'postingtitletext'})
         
