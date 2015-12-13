@@ -114,7 +114,7 @@ def scrape_category_page(url):
     items = soup.find_all('a', {'class':'i'}, href=True)
    # items_with_age = [item['href'] for item in items if (item.find('span') and ('craigslist.org' not in item['href']))]
     #if href contains craigslist them it is a redirect to a posting at another location 
-    item_hrefs = [item['href'] for item in items if 'craigslist.org' not in items['href']]
+    item_hrefs = [item['href'] for item in items if 'craigslist.org' not in item['href']]
     
     return item_hrefs
 
