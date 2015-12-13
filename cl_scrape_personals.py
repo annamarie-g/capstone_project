@@ -110,7 +110,7 @@ def scrape_category_page(url):
     #if href contains craigslist them it is a redirect to a posting at another location 
     #item_hrefs = [items_with_age['href'] for items_with_age in items_with_age if 'craigslist.org' not in items_with_age['href']]
     
-    return item_hrefs
+    return items_with_age
 
 def scrape_personals_posting((location_tuple, category_tuple, url)):
     #slight pause 
