@@ -251,7 +251,7 @@ def scrape_concurrent(locations, location_tuples, category_tuples):
 
         #remove location_tuple from list if finished scraping location 
         locations[location_tuple[0]].remove([location_tuple[1], location_tuple[2]])
-    	write_remaining_to_dict(locations)	
+#    	write_remaining_to_dict(locations)	
 	
     #finished scrape
     export_table() 
