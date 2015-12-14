@@ -18,7 +18,7 @@ import os
 
 def requests_get_trycatch(url):
     try:
-		r = requests.get(url) 
+	r = requests.get(url) 
     except: #this is when there is an issue with the proxy 
 
         #not a valid url 
