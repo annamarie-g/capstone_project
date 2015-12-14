@@ -36,7 +36,8 @@ def write_remaining_to_dict(locations):
     #don't need to call this function, 
 	
     #overwrite existing file - will iteratively work its way down
-    with open('regions/remaining_locations_to_scrape.json', 'wb') as fp:
+
+    with open('regions/remaining_{}.json'.format(table_name), 'wb') as fp:
         json.dump(locations, fp) 
 
 def load_dicts(location_dict, category_dict): 
