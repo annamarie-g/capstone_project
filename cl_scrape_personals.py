@@ -19,15 +19,16 @@ import os
 def requests_get_trycatch(url):
     try:
 	r = requests.get(url) 
+	#not a valid url 
+	if r.status_code == 404:    
+	    print 'not a valid url: {}'.format(url)
+	    raw_input('Press Enter to continue...')
+	elif r.status_code == 403: 
+	    print 'You are blocked in this IP'
+	    #export mongo table 
+	    export_table() 
+	    exit()
     except: #this is when there is an issue with the proxy 
-
-        #not a valid url 
-        if r.status_code == 404:    
-            print 'not a valid url: {}'.format(url)
-            raw_input('Press Enter to continue...')
-        elif r.status_code == 403: 
-            print 'You are blocked in this IP'
-            #export mongo table 
             export_table() 
             exit()
     #Once I am able to get a valid response, it doesn't really matter whether I return session because this is the end product for each session variable created  
