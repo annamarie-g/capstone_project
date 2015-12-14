@@ -25,11 +25,8 @@ def requests_get_trycatch(url):
 	    raw_input('Press Enter to continue...')
 	elif r.status_code == 403: 
 	    print 'You are blocked in this IP'
-	    #export mongo table 
-	    export_table() 
 	    exit()
     except: #this is when there is an issue with the proxy 
-            export_table() 
             exit()
     #Once I am able to get a valid response, it doesn't really matter whether I return session because this is the end product for each session variable created  
     return r 
@@ -131,7 +128,7 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
 
     soup = BeautifulSoup(resp.text)
 
-    repost_index = soup.text.find('repost_of = ')
+    if soup.text.find('repost_of = ')
     if repost_index !=-1:#it is a repost 
         repost_value_index = repost_index + len('repost_of = ')
         post_dict['repost_of'] = soup.text[repost_value_index:repost_value_index+10]
@@ -253,16 +250,13 @@ def scrape_concurrent(locations, location_tuples, category_tuples):
         #remove location_tuple from list if finished scraping location 
         locations[location_tuple[0]].remove([location_tuple[1], location_tuple[2]])
     	write_remaining_to_dict(locations)	
-	
-    #finished scrape
-    export_table() 
+
 
 def export_table():
     #called when scrape is finished, or when scrape gets interrupted 
     #export table to mongo after scrape
     output_fp = 'data/loc_cat_scrape/{}'.format(table_name) + '.json'
     os.system('mongoexport --db {} --collection {} --jsonArray --out {}'.format(db_name, table_name, output_fp))
-    
 
 if __name__=='__main__':
 	
