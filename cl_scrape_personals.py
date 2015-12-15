@@ -19,7 +19,7 @@ def requests_get_trycatch(url):
     
     #For debugging purposes-- write url to file 
     with open('urls_visited.txt', 'a') as file:
-        file.write(url + ' , ') 
+        file.write("'" +url+ "'" + ' , ') 
 
     try:
 	r = requests.get(url) 
@@ -139,14 +139,10 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
         post_dict['repost_of'] = soup.text[repost_value_index:repost_value_index+10]
 
     #Posting Body 
-    post_dict['posting_body'] = soup.find('meta', {'name':'description'})['content'] 
+    post_dict['posting_body'] = soup.find('section', {'id':'name'}).text 
     #check to see if post has been deleted 
-    if 'This posting has been deleted by its author.' or 'This posting has been flagged for removal.' in post_dict['posting_body']:
+    if ('This posting has been deleted by its author.' or 'This posting has been flagged for removal.') in post_dict['posting_body']:
         return post_dict 
-
-    #grab posting and title before paring down 
-    #Post title 
-    post_dict['title'] = soup.find('meta', {'property':'og:title'})['content'] 
 
     soup = soup.find('section', {'class':'body'})
     post_dict['url'] = url 
@@ -156,12 +152,16 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
     post_dict['category_title'] = category_tuple[1] 
 
     title_block  = soup.find('span', {'class':'postingtitletext'})
-        
-    #if there is a subtitle
-    subtitle = title_block.find('small')
-    if subtitle:
-        post_dict['area'] = subtitle.text
-
+    if title_block:
+	post_dict['title'] = title_block.text 	
+    
+    	#if there is a subtitle
+    	subtitle = title_block.find('small')
+    	if subtitle:
+            post_dict['area'] = subtitle.text
+	    #if there is a subtitle, remove it from the title and replace title
+	    post_dict['title'] = post_dict['title'].replace(subtitle.text, '')
+	    
     #Number of images 
     num_images = len(soup.find_all('img'))
     if num_images == 0: 
