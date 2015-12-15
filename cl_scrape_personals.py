@@ -129,7 +129,7 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
 
     soup = BeautifulSoup(resp.text)
 
-    if soup.text.find('repost_of = ')
+    if soup.text.find('repost_of = '):
     if repost_index !=-1:#it is a repost 
         repost_value_index = repost_index + len('repost_of = ')
         post_dict['repost_of'] = soup.text[repost_value_index:repost_value_index+10]
