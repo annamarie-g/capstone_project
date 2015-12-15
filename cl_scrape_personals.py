@@ -26,7 +26,7 @@ def requests_get_trycatch(url):
 	#not a valid url 
 	if r.status_code == 404:    
 	    print 'not a valid url: {}'.format(url)
-	    raw_input('Press Enter to continue...')
+	    #raw_input('Press Enter to continue...')
 	elif r.status_code == 403: 
 	    print 'You are blocked in this IP'
 	    exit()
