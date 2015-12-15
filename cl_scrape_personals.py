@@ -1,5 +1,4 @@
 import requests
-import pip 
 import json
 from multiprocessing import Pool
 from multiprocessing.dummy import Pool as ThreadPool
@@ -32,7 +31,7 @@ def requests_get_trycatch(url):
 	    print 'You are blocked in this IP'
 	    exit()
     except: #this is when there is an issue with the proxy 
-            exit()
+        exit()
     #Once I am able to get a valid response, it doesn't really matter whether I return session because this is the end product for each session variable created  
     return r 
 
@@ -134,7 +133,7 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
 
     soup = BeautifulSoup(resp.text)
 
-    repost_index = soup.text.find('repost_of = ')
+    repost_index = soup.text.find('repost_of = '):
     if repost_index !=-1:#it is a repost 
         repost_value_index = repost_index + len('repost_of = ')
         post_dict['repost_of'] = soup.text[repost_value_index:repost_value_index+10]
