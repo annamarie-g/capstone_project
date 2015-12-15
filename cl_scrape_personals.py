@@ -141,7 +141,7 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
     #Posting Body 
     post_dict['posting_body'] = soup.find('meta', {'name':'description'})['content'] 
     #check to see if post has been deleted 
-    if 'This posting has been deleted by its author.' in post_dict['posting_body']:
+    if 'This posting has been deleted by its author.' or 'This posting has been flagged for removal.' in post_dict['posting_body']:
         return post_dict 
 
     #grab posting and title before paring down 
@@ -210,7 +210,7 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
 
     post_dict['scrape_time'] = dt.datetime.utcnow().isoformat()
     
-    #table.insert_one(post_dict) 
+    table.insert_one(post_dict) 
 
 
 def scrape_category_pages_concurrent(cat_page_urls):
