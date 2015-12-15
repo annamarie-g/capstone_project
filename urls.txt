@@ -1,2 +1,0 @@
-http://stackoverflow.com/questions/5214578/python-print-string-to-text-file
-http://stackoverflow.com/questions/5214578/python-print-string-to-text-file
