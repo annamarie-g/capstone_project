@@ -277,9 +277,9 @@ if __name__=='__main__':
     db_name = 'cl_scrape' 
     db = db_client[db_name]
     global table_name #global so that mongo can export in function, this table name will never change during execution of script 
-    table_name = ''.join([region.replace('_', ''), category.replace('_',  ''), dt.date.today().isoformat()[-5:].replace('-', '')]) 
+    table_name = ''.join([region.replace('_', '').replace(category,''), category.replace('_',  ''), dt.date.today().isoformat()[-5:].replace('-', '')]) 
     table = db[table_name]
-
+	
     region_dict_fp = 'regions/' + region + '.json' 
     category_dict_fp = 'categories/personals/' + category + '.json' 
     locations, location_tuples, category_tuples = load_dicts(location_dict = region_dict_fp, category_dict = category_dict_fp)     
