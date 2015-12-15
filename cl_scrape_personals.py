@@ -17,6 +17,11 @@ import os
 
 
 def requests_get_trycatch(url):
+    
+    #For debugging purposes-- write url to file 
+    with open('urls_visited.txt', 'a') as file:
+        file.write(url + ' , ') 
+
     try:
 	r = requests.get(url) 
 	#not a valid url 
@@ -94,7 +99,7 @@ def category_page_urls(location_tuple, category_tuple):
     	upperbnd = total - (total%100)
     else: 
 	#upperbnd = 2400 means there are no postings
-	return []
+        return []
 
     page_urls = ['{}?s={}'.format(base_url, page_index) for page_index in range(upperbnd, -100, -100)]
     return page_urls 
@@ -129,7 +134,7 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
 
     soup = BeautifulSoup(resp.text)
 
-    if soup.text.find('repost_of = ')
+    repost_index = soup.text.find('repost_of = ')
     if repost_index !=-1:#it is a repost 
         repost_value_index = repost_index + len('repost_of = ')
         post_dict['repost_of'] = soup.text[repost_value_index:repost_value_index+10]
@@ -251,7 +256,6 @@ def scrape_concurrent(locations, location_tuples, category_tuples):
         #remove location_tuple from list if finished scraping location 
         locations[location_tuple[0]].remove([location_tuple[1], location_tuple[2]])
     	write_remaining_to_dict(locations)	
-
 
 def export_table():
     #called when scrape is finished, or when scrape gets interrupted 
