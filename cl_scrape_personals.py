@@ -124,7 +124,7 @@ def scrape_category_page(url):
 def scrape_personals_posting((location_tuple, category_tuple, url)):
     #slight pause 
     time.sleep(1)
-
+    
     post_dict = defaultdict() 
     resp = requests_get_trycatch(url)
         #check if valid URL 
@@ -132,6 +132,9 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
         return post_dict
 
     soup = BeautifulSoup(resp.text)
+    
+    if soup.find('div', {'class':'removed'}):
+        return []
 
     repost_index = soup.text.find('repost_of = ')
     if repost_index !=-1:#it is a repost 
