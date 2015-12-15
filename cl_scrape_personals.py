@@ -1,5 +1,4 @@
 import requests
-import pip 
 import json
 from multiprocessing import Pool
 from multiprocessing.dummy import Pool as ThreadPool
@@ -32,7 +31,7 @@ def requests_get_trycatch(url):
 	    print 'You are blocked in this IP'
 	    exit()
     except: #this is when there is an issue with the proxy 
-            exit()
+        exit()
     #Once I am able to get a valid response, it doesn't really matter whether I return session because this is the end product for each session variable created  
     return r 
 
