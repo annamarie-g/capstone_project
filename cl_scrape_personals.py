@@ -285,5 +285,5 @@ if __name__=='__main__':
     locations, location_tuples, category_tuples = load_dicts(location_dict = region_dict_fp, category_dict = category_dict_fp)     
     
     scrape_concurrent(locations, location_tuples, category_tuples) 	
-    os.remove('regions/remaining_{}.json'.format(table_name)
+    os.remove('regions/remaining_{}.json'.format(table_name))
     os.remove('urls_visited.txt')
