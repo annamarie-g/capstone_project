@@ -106,7 +106,8 @@ def category_page_urls(location_tuple, category_tuple):
 def posting_urls(location_tuple, category_tuple, item_hrefs):
 	#Returns list of posting urls given list of item hrefs from category page scrape 
 	location_href = location_tuple[2]
-	item_urls = [location_href + href if ('craigslist.ca' not in href and 'craigslist.mx' not in href) else 'http:' + href for href in item_hrefs]
+	#item_urls = [location_href + href if ('craigslist.ca' not in href and 'craigslist.mx' not in href) else 'http:' + href for href in item_hrefs]
+    item_urls = [location_href + href for href in item_hrefs if ('craigslist.ca' not in href) and ('craigslist.mx' not in href)] 
 	return item_urls 
 
 def scrape_category_page(url):
@@ -117,7 +118,7 @@ def scrape_category_page(url):
     items = soup.find_all('a', {'class':'i'}, href=True)
    # items_with_age = [item['href'] for item in items if (item.find('span') and ('craigslist.org' not in item['href']))]
     #if href contains craigslist them it is a redirect to a posting at another location 
-    item_hrefs = [item['href'] for item in items if 'craigslist.org' not in item['href']]
+    item_hrefs = [item['href'] for item in items if 'craigslist.' not in item['href']]
     
     return item_hrefs
 
