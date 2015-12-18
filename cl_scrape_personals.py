@@ -18,8 +18,8 @@ import os
 def requests_get_trycatch(url):
     
     #For debugging purposes-- write url to file 
-    with open('urls_visited.txt', 'a') as file:
-        file.write("'" +url+ "'" + ' , ') 
+    #with open('urls_visited.txt', 'a') as file:
+    #    file.write("'" +url+ "'" + ' , ') 
 
     try:
 	r = requests.get(url) 
@@ -28,7 +28,7 @@ def requests_get_trycatch(url):
 	    print 'not a valid url: {}'.format(url)
 	    #raw_input('Press Enter to continue...')
 	elif r.status_code == 403: 
-	    print 'You are blocked in this IP'
+	    print 'You are blocked on this IP'
 	    exit()
     except: #this is when there is an issue with the proxy 
         exit()
