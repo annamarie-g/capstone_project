@@ -13,7 +13,7 @@ from nltk.collocations import TrigramAssocMeasures
 def word_tokenize(df):
     #tokenizes using nltk tweet tokenizer
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
-    df['title_word_tokens', 'total_text_word_tokens'] = df[['title', 'total_text']].applymap(tokenizer.tokenize)
+    df[['title_word_tokens', 'total_text_word_tokens']] = df[['title', 'total_text']].applymap(tokenizer.tokenize)
     return df 
 
 '''
