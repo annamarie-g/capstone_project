@@ -11,18 +11,17 @@ from nltk.collocations import TrigramAssocMeasures
 #df.applymap is for applying a function elementwise on dataframe 
 #series.map is for applying function elementwise on series 
 
-def word_tokenize(df):
-    #tokenizes using nltk tweet tokenizer
-    tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
-    df[['title_word_tokens', 'total_text_word_tokens']] = df[['title', 'total_text']].applymap(tokenizer.tokenize)
-    return df 
+def tokenize(series):
+    #tokenizes using nltk tweet tokenizer 
+    token_series = series.map(custom_tokenizer)
+    return token_series
 
 def custom_tokenizer(text):
     #remove breaklines 
     text = re.sub('\n', ' ', text)
     #spell 420
     text = re.sub('420', 'fourtwenty', text)
-    #remove age
+    #remove all numbers 
     text = re.sub('[0-9]', ' ', text)
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
     tokens = tokenizer.tokenize(text)
@@ -59,7 +58,7 @@ def normalize():
 def custom_stop_words():
     stop_words = stopwords.words('english')
     #Remove anything that is age-related 
-    randoms = ["i'm"]
+    randoms = ["i'm", 'im']
     relation = ['mother', 'husband', 'wife', 'daughter', 'dad', 'father', 'daddy', 'son']
     age_status = ['old', 'young', 'retired', 'year', 'youth', 'youthful', 'older', 'younger', 'mature', 'lady', 'girl', 'boy']
     stop_words.extend(randoms)
@@ -90,10 +89,6 @@ def add_num_09nyms(df):
     df['num_09nyms'] = df.ix[:, ['total_text','title']].map(is_09nyms).apply(sum, axis=0)  
     return df 
 
-def remove_09nyms(df):
-    pass  
-
-
 if __name__=='__main__':
     df = pd.read_pickle('df_age_predict.pkl')
     df[['title', 'total_text']] = df[['title', 'total_text']].applymap(lambda x: x.decode('ISO-8859-1'))
@@ -101,7 +96,7 @@ if __name__=='__main__':
     df = change_420(df)
     #remove mentions of age   
     df = remove_age(df)
-    #identify 09nyms, then remove
+    #identify 09nyms, then add as feature
     
     #tokenize words in total text and title 
     df = word_tokenize(df)
