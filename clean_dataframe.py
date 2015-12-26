@@ -139,3 +139,4 @@ if __name__=='__main__':
     df = create_total_text(df)
     df.drop(['smokes','drinks', 'drugs', 'height', 'area', 'notices', 'post_id', 'repost_of', 'scrape_time'], axis=1, inplace=True)
     df = get_english_posts(df)
+    df = df.set_index(np.arange(df.shape[0]))

@@ -17,7 +17,11 @@ def word_tokenize(df):
     df[['title_word_tokens', 'total_text_word_tokens']] = df[['title', 'total_text']].applymap(tokenizer.tokenize)
     return df 
 
-def custom_tokenizer(text):
+def custom_tokenizer(text): 
+    #to lowercase 
+    text = text.lower() 
+    #remove breaklines 
+    text = re.sub('\n', ' ', text)
     #spell 420
     text = re.sub('420', 'fourtwenty', text)
     #remove age

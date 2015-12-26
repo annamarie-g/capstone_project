@@ -56,6 +56,6 @@ if __name__=='__main__':
     X_train, X_test, y_train, y_test = train_test_split(total_mat, resp, test_size = 0.3)
 
     #random forest
-    #rf = random_forest(X_train, y_train)
+    rf = random_forest(X_train, y_train)
     #rf.score(X_test, rf.predict(X_test))
 	
