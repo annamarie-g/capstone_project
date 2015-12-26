@@ -1,6 +1,7 @@
 import numpy as np 
 import pandas as pd 
 import re 
+from nltk.corpus import stopwords 
 from nltk.tokenize import TweetTokenizer
 from nltk.tokenize.mwe import MWETokenizer
 from nltk.collocations import BigramAssocMeasures
@@ -20,7 +21,7 @@ def custom_tokenizer(text):
     #spell 420
     text = re.sub('420', 'fourtwenty', text)
     #remove age
-    text = re.sub('\s[0-9]{2}', ' ', text)
+    text = re.sub('[0-9]', ' ', text)
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
     tokens = tokenizer.tokenize(text)
     return tokens
@@ -53,13 +54,16 @@ def normalize():
     #identify SMS language
 	pass 
 
-def stop_words():
-  
+def custom_stop_words():
+    stop_words = stopwords.words('english')
     #Remove anything that is age-related 
     relation = ['mother', 'husband', 'wife', 'daughter', 'dad', 'father', 'daddy', 'son']
     age_status = ['old', 'young', 'retired', 'year', 'youth', 'youthful', 'older', 'younger', 'mature', 'lady', 'girl', 'boy']
+    stop_words.extend(relation)
+    stop_words.extend(age_status)
+    return stop_words 
 
-
+'''
 def change_420(df): 
     #change four twenty to text 
     df.ix[:,['title', 'total_text']] = df.ix[:, ['title', 'total_text']].applymap(lambda x: re.sub('420', 'fourtwenty', x))
@@ -70,15 +74,15 @@ def remove_age(df):
     #make sure that only removing 2 consecutive numbers 
     df.ix[:, ['title','total_text']] = df.ix[:, ['title', 'total_text']].applymap(lambda x: re.sub('\s[0-9]{2}', ' ', x))
     return df 
+'''
 
-def identify_09nyms(df):
+def is_09nyms(df):
     #find all numeronyms and count number of occurences-- use as feature
-    #df['num_numeronyms'] = 
     return num_09nyms
 
 def add_num_09nyms(df): 
     #add the number of numeronyms as a feature 
-    df['num_09nyms'] = df.ix[:, ['total_text','title']].map(identify_09nyms).apply(sum, axis=0)  
+    df['num_09nyms'] = df.ix[:, ['total_text','title']].map(is_09nyms).apply(sum, axis=0)  
     return df 
 
 def remove_09nyms(df):
