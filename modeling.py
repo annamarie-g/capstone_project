@@ -48,7 +48,10 @@ if __name__=='__main__':
     title_mat, title_features = tfidf_matrix(df['title'])
     cat_dummies = category_dummies(df)
     #create list of features 
-    total_features = text_features.extend()
+    total_features = []
+    total_features.extend(text_features)
+    total_features.extend(title_features)
+    total_features.extend(cat_dummies.columns.tolist()))
     
     #combine matrices 
     total_mat = build_feature_matrix((text_mat, title_mat, np.array(cat_dummies)))
