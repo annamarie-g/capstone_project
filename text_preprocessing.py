@@ -57,8 +57,10 @@ def normalize():
 def custom_stop_words():
     stop_words = stopwords.words('english')
     #Remove anything that is age-related 
+    randoms = ["i'm"]
     relation = ['mother', 'husband', 'wife', 'daughter', 'dad', 'father', 'daddy', 'son']
     age_status = ['old', 'young', 'retired', 'year', 'youth', 'youthful', 'older', 'younger', 'mature', 'lady', 'girl', 'boy']
+    stop_words.extend(randoms)
     stop_words.extend(relation)
     stop_words.extend(age_status)
     return stop_words 

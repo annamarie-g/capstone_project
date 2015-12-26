@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sc
 import pandas as pd 
-import text_processing as tp
+import text_preprocessing as tp
 from sklearn.cluster import KMeans 
 from sklearn.decomposition import NMF 
 from sklearn.feature_extraction.text import TfidfVectorizer 
@@ -15,11 +15,12 @@ def tfidf_matrix(series):
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
-    return tfidf_mat
+    features = vectorizer.get_feature_names()
+    return tfidf_mat, features
 
 def build_feature_matrix(matrices):
     #Input is tuple of matrices to stack
-    total_mat = sc.sparse.hstack(matrices))
+    total_mat = sc.sparse.hstack(matrices)
     return total_mat
 
 def category_dummies(df):
@@ -43,11 +44,14 @@ if __name__=='__main__':
     df = pd.read_pickle('df_age_predict.pkl')
     #create tfidf matrix for total_text
     #create tfidf matrix for titles 
-    text_mat = tfidf_matrix(df['total_text'])
-    title_mat = tfidf_matrix(df['title'])
+    text_mat, text_features = tfidf_matrix(df['total_text'])
+    title_mat, title_features = tfidf_matrix(df['title'])
     cat_dummies = category_dummies(df)
+    #create list of features 
+    total_features = text_features.extend(title_features.extend(cat_dummies.columns.tolist()))
+    
     #combine matrices 
-    total_mat = build_feature_matrix((text_mat, title_mat, np.array(cat_dummies))
+    total_mat = build_feature_matrix((text_mat, title_mat, np.array(cat_dummies)))
     resp = df['age']
     X_train, X_test, y_train, y_test = train_test_split(total_mat, resp, test_size = 0.3)
 
