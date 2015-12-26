@@ -2,6 +2,8 @@
 import pandas as pd
 import numpy as np 
 #for detecting langugage
+import nltk
+nltk.download()
 from nltk.corpus import stopwords
 from nltk import wordpunct_tokenize
 import re 
@@ -13,7 +15,7 @@ import re
 def create_age_groups(df):
     #get rid of all ages over 91 
     df = df.ix[df.age < 91,:]
-    df['age_group'] = pd.cut(df.ix[:,age], range(5, 95,10), right=False,labels= [ "{0} - {1}".format(i, i + 9) for i in range(5, 85, 10)])
+    df['age_group'] = pd.cut(df.ix[:,'age'], range(5, 95,10), right=False,labels= [ "{0} - {1}".format(i, i + 9) for i in range(5, 85, 10)])
     return df 
 
 def create_total_text(df):
