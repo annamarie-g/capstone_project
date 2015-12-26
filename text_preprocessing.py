@@ -16,17 +16,14 @@ def word_tokenize(df):
     df[['title_word_tokens', 'total_text_word_tokens']] = df[['title', 'total_text']].applymap(tokenizer.tokenize)
     return df 
 
-'''
-#Don't need to use sentence tokenizer or calculate average sentence length because punctuation included in tfidf vector 
-def sentence_tokenize(df):
-    #tokenize total text by sentences 
-    df['total_text_sentences'] = df['total_text'].map() 
-    return df 
-
-def add_sentence_length(df):
-    #determine average length of user sentence  
-    df['sentence_length'] = df[:,['total_text_sentences','total_text_tokens']].apply(lambda row: len(row['total_text_tokens'])/float(len(row['total_text_sentences']))
-'''
+def custom_tokenizer(text):
+    #spell 420
+    text = re.sub('420', 'fourtwenty', text)
+    #remove age
+    text = re.sub('\s[0-9]{2}', ' ', text)
+    tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
+    tokens = tokenizer.tokenize(text)
+    return tokens
 
 def add_pos_usage(df):
     #find percentage of verbs, adverbs, nouns, etc. 

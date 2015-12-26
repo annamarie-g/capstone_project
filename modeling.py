@@ -21,8 +21,11 @@ def random_forest(X_train, y_train):
     rf.fit_transform(X_train, y_train) 
     return rf 
 
-def gradient_boosting(series): 
-    pass 
+def gradient_boosting(X_train, y_train): 
+    gb = GradientBoostingRegressor(n_jobs = -1)
+    gb.fit_transform(X_train, y_train) 
+    return gb 
+    
 
 if __name__=='__main__':	
     df = pd.read_pickle('df_tokenized.pkl')
