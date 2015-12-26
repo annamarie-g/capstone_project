@@ -28,18 +28,20 @@ def gradient_boosting(X_train, y_train):
     
 
 if __name__=='__main__':	
-    df = pd.read_pickle('df_tokenized.pkl')
+    df = pd.read_pickle('df_age_predict.pkl')
     #create tfidf matrix for total_text
     #create tfidf matrix for titles 
     text_mat = tfidf_matrix(df['total_text'])
     title_mat = tfidf_matrix(df['title'])
+    #create dummies for category_code
+    dummies = pd.get_dummies(df['category_code'])
+    dummies.drop('m4m', axis=1, inplace=True)    
     #combine matrices 
-    total_mat = sc.sparse.hstack((text_mat, title_mat))
-    #create dummies for category_code 
+    total_mat = sc.sparse.hstack((text_mat, title_mat, np.array(dummies)))
     resp = df['age']
     X_train, X_test, y_train, y_test = train_test_split(total_mat, resp, test_size = 0.3)
 
     #random forest
-    rf = random_forest(X_train, y_train)
-    rf.score(X_test, rf.predict(X_test))
+    #rf = random_forest(X_train, y_train)
+    #rf.score(X_test, rf.predict(X_test))
 	
