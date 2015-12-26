@@ -18,8 +18,6 @@ def word_tokenize(df):
     return df 
 
 def custom_tokenizer(text):
-    #to lowercase 
-    text = text.lower() 
     #remove breaklines 
     text = re.sub('\n', ' ', text)
     #spell 420
@@ -84,7 +82,7 @@ def remove_age(df):
 
 def is_09nyms(df):
     #find all numeronyms and count number of occurences-- use as feature
-    '([a-zA-Z])([0-9])'
+    expr = '([a-zA-Z])([0-9])'
     return num_09nyms
 
 def add_num_09nyms(df): 

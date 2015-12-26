@@ -11,7 +11,7 @@ from sklearn.cross_validation import train_test_split
 
 
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(tokenizer = tp.custom_tokenizer, stop_words=tp.custom_stop_words(),)
+    vectorizer = TfidfVectorizer(tokenizer = tp.custom_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -43,15 +43,15 @@ def gradient_boosting(X_train, y_train):
 if __name__=='__main__':	
     df = pd.read_pickle('df_age_predict.pkl')
     #create tfidf matrix for total_text
-    #create tfidf matrix for titles 
     text_mat, text_features = tfidf_matrix(df['total_text'])
+    #create tfidf matrix for titles 
     title_mat, title_features = tfidf_matrix(df['title'])
     cat_dummies = category_dummies(df)
     #create list of features 
     total_features = []
     total_features.extend(text_features)
     total_features.extend(title_features)
-    total_features.extend(cat_dummies.columns.tolist()))
+    total_features.extend(cat_dummies.columns.tolist())
     
     #combine matrices 
     total_mat = build_feature_matrix((text_mat, title_mat, np.array(cat_dummies)))
