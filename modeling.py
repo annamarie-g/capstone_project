@@ -48,7 +48,7 @@ if __name__=='__main__':
     title_mat, title_features = tfidf_matrix(df['title'])
     cat_dummies = category_dummies(df)
     #create list of features 
-    total_features = text_features.extend(title_features.extend(cat_dummies.columns.tolist()))
+    total_features = text_features.extend()
     
     #combine matrices 
     total_mat = build_feature_matrix((text_mat, title_mat, np.array(cat_dummies)))
@@ -58,4 +58,4 @@ if __name__=='__main__':
     #random forest
     rf = random_forest(X_train, y_train)
     #rf.score(X_test, rf.predict(X_test))
-	
+
