@@ -42,28 +42,32 @@ def gradient_boosting(X_train, y_train):
     
 
 if __name__=='__main__':	
-    df = pd.read_pickle('df_age_predict.pkl')
+    with open('training_data.pkl', 'rb') as fid:
+	training_data = cPickle.load(fid)
+    df = pd.concat(training_data[0], training_data[1], axis=1)
+    df = df.ix[df['age'] < 50, :]
+    target = df['age']
     #create tfidf matrix for total_text
     text_mat, text_features = tfidf_matrix(df['total_text'])
     #create tfidf matrix for titles 
     title_mat, title_features = tfidf_matrix(df['title'])
-    cat_dummies = category_dummies(df)
+#    cat_dummies = category_dummies(df)
     #create list of features 
     total_features = []
-    total_features.extend(text_features)
+    #total_features.extend(text_features)
     total_features.extend(title_features)
-    total_features.extend(cat_dummies.columns.tolist())
-    
+ #   total_features.extend(cat_dummies.columns.tolist())	
+        
     #add total text length as feature
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
-    total_mat = build_feature_matrix((text_mat, title_mat, np.array(cat_dummies), np.array(df['num_attributes']), np.array(df['num_images']), np.array(df['total_text_length'])))
-    resp = df['age']
-    X_train, X_test, y_train, y_test = train_test_split(total_mat, resp, test_size = 0.3)
-
+    total_mat = build_feature_matrix((text_mat, title_mat, np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
+    X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size = 0.3)
+	
     #random forest
     rf = random_forest(X_train, y_train)
     with open('rf_model_with_features.pkl', 'wb') as fid:
 	cPickle.dump(rf, fid)
-    #rf.score(X_test, rf.predict(X_test))
+    print 'Random Forest Regressor R^2:'
+    print rf.score(X_test, y_test)
 
