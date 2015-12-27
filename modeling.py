@@ -9,9 +9,13 @@ from sklearn.decomposition import NMF
 from sklearn.feature_extraction.text import TfidfVectorizer 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import GradientBoostingRegressor 
+from sklearn.ensemble import RandomForestClassifier 
 from sklearn.cross_validation import train_test_split 
 
 
+def create_collocations_from_trainingset(series):
+    pass 
+ 
 def tfidf_matrix(series):
     vectorizer = TfidfVectorizer(tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
@@ -31,16 +35,25 @@ def category_dummies(df):
     dummies.drop('m4m', axis=1, inplace=True)    
     return dummies 
 
-def random_forest(X_train, y_train): 
-    rf = RandomForestRegressor(n_estimators= 100,n_jobs = -1, random_state=42)
-    rf.fit_transform(X_train, y_train) 
-    return rf 
+def random_forest_regressor(X_train, y_train): 
+    rfr = RandomForestRegressor(n_estimators= 100,max_features = 'sqrt' ,n_jobs = -1, random_state=42)
+    rfr.fit_transform(X_train, y_train) 
+    return rfr 
+
+def random_forest_classifier(X_train, y_train):
+    rfc = RandomForestClassifier(n_estimators = 100, max_features = 'sqrt', n_jobs = -1, random_state=42)
+    rfc.fit_transform(X_train, y_train)
+    return rfc 
 
 def gradient_boosting(X_train, y_train): 
     gb = GradientBoostingRegressor(n_jobs = -1, random_state=42)
     gb.fit_transform(X_train, y_train) 
     return gb 
-    
+   
+def create_age_groups(series):
+    #cut into age groups 
+    age_group = pd.cut(series, range(5,95,10), right=False, labels = ["{0} - {1}".format(i, i+9) for i in range(5, 85, 10)])
+    return age_group
 
 if __name__=='__main__':	
     with open('df_age_predict.pkl', 'rb') as fid:
@@ -62,13 +75,19 @@ if __name__=='__main__':
     #add total text length as feature
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
-    total_mat = build_feature_matrix((title_mat, np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
+    total_mat = build_feature_matrix((text_mat, title_mat, np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
     X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size = 0.3)
+
+    #create age group on y_train and y_test 
+    y_train_clf = create_age_groups(y_train)
+    y_test_clf = create_age_groups(y_test)	
 	
-    #random forest
-    rf = random_forest(X_train, y_train)
-    with open('rf_model_with_features.pkl', 'wb') as fid:
-	cPickle.dump(rf, fid)
+
+    rfc = random_forest_classifier(X_train, y_train_clf)
+    print 'Random Forest Classifer: accuracy'
+    print rfc.score(X_test, y_test_clf)
+	
+    rfr = random_forest_regressor(X_train, y_train)
     print 'Random Forest Regressor R^2:'
     print rf.score(X_test, y_test)
 
