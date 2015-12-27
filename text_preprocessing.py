@@ -4,8 +4,8 @@ import re
 from nltk.corpus import stopwords 
 from nltk.tokenize import TweetTokenizer
 from nltk.tokenize.mwe import MWETokenizer
-from nltk.collocations import BigramAssocMeasures
-from nltk.collocations import TrigramAssocMeasures
+from nltk.collocations import BigramAssocMeasures, BigramCollocationFinder
+from nltk.collocations import TrigramAssocMeasures, TrigramCollocationFinder
 
 #df.apply is for operations on rows/columns
 #df.applymap is for applying a function elementwise on dataframe 
@@ -35,17 +35,16 @@ def find_collocations(text_series):
     #use nltk.collocations to find the most commonly occuring bigrams and trigrams
     bigram_measures = BigramAssocMeasures()
     trigram_measures = TrigramAssocMeasures()
-    tokens = text_series.tolist() 
-    finder_bigrams = BigramCollocationFinder.from_words(tokens,window_size =20)
-    finder_trigrams = TrigramCollocationFinder.from_words(tokens, window_size =20)
-    #finder = BigramCollocationFinder.from_words(
+    tokens = [token for token_list in text_series for token in token_list]
+    bigram_MWEs = BigramCollocationFinder.from_words(tokens)
+    trigram_MWEs = TrigramCollocationFinder.from_words(tokens)
     #returns list of MWEs
     #return MWEs 
     return bigram_MWEs, trigram_MWEs 
 
 def mwe_tokenize(text_series):
     #Retokenizes tokenized text to combine MWEs from list of most common
-    MWEs  = _find_collocations(text_series)
+    MWEs  = find_collocations(text_series)
     tokenizer = MWETokenizer(MWEs, separator='+')
     text_series.map(tokenizer)
     return text_series 

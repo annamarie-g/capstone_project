@@ -3,6 +3,7 @@ import scipy as sc
 import pandas as pd 
 import cPickle
 import text_preprocessing as tp
+from nltk.corpus import stopwords 
 from sklearn.cluster import KMeans 
 from sklearn.decomposition import NMF 
 from sklearn.feature_extraction.text import TfidfVectorizer 
@@ -12,7 +13,7 @@ from sklearn.cross_validation import train_test_split
 
 
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(tokenizer = tp.custom_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
+    vectorizer = TfidfVectorizer(tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
