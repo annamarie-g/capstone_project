@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sc
 import pandas as pd 
+import cPickle
 import text_preprocessing as tp
 from sklearn.cluster import KMeans 
 from sklearn.decomposition import NMF 
@@ -53,12 +54,16 @@ if __name__=='__main__':
     total_features.extend(title_features)
     total_features.extend(cat_dummies.columns.tolist())
     
+    #add total text length as feature
+    df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
-    total_mat = build_feature_matrix((text_mat, title_mat, np.array(cat_dummies)))
+    total_mat = build_feature_matrix((text_mat, title_mat, np.array(cat_dummies), np.array(df['num_attributes']), np.array(df['num_images']), np.array(df['total_text_length'])))
     resp = df['age']
     X_train, X_test, y_train, y_test = train_test_split(total_mat, resp, test_size = 0.3)
 
     #random forest
     rf = random_forest(X_train, y_train)
+    with open('rf_model_with_features.pkl', 'wb') as fid:
+	cPickle.dump(rf, fid)
     #rf.score(X_test, rf.predict(X_test))
 
