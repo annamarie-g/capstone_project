@@ -1,6 +1,8 @@
 import numpy as np 
 import pandas as pd 
 import re 
+import string 
+from string import translate
 from nltk.corpus import stopwords 
 from nltk.tokenize import TweetTokenizer
 from nltk.tokenize.mwe import MWETokenizer
@@ -26,6 +28,16 @@ def custom_tokenizer(text):
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
     tokens = tokenizer.tokenize(text)
     return tokens
+
+def remove_escape_sequences(text): 
+    #removes escape sequences by only returning printable characters from string
+    #allords = [i for i in xrange(256)]
+    #allchars = ''.join(chr(i) for i in allords)
+    printableords = [ord(ch) for ch in string.printable]
+    deletechars  = ''.join(chr(i) for i in xrange(256) if i not in printableords)
+    trans_table = dict.fromkeys(deletechars, None)
+    clean_text = text.translate(trans_table) 
+    return clean_text 
 
 def add_pos_usage(df):
     #find percentage of verbs, adverbs, nouns, etc. 
@@ -91,18 +103,11 @@ def add_num_09nyms(df):
 if __name__=='__main__':
     df = pd.read_pickle('df_age_predict.pkl')
     df[['title', 'total_text']] = df[['title', 'total_text']].applymap(lambda x: x.decode('ISO-8859-1'))
-    #fix fourtwenty so it's not removed 
-    df = change_420(df)
-    #remove mentions of age   
-    df = remove_age(df)
+    df[['title', 'total_text']] = df[['title', 'total_text']].applymap(remove_escape_sequences)
+    df = df.to_pickle('df_age_predict.pkl')
     #identify 09nyms, then add as feature
-    
-    #tokenize words in total text and title 
-    df = word_tokenize(df)
     #spell correct - account for number of corrections as feature
-
     #find collocations among total_text
-
     #find collocations among titles
     #MWE tokenizer -- apply for total_text 
     #MWE tokenizer -- apply for title 
