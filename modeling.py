@@ -11,6 +11,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import GradientBoostingRegressor 
 from sklearn.ensemble import RandomForestClassifier 
 from sklearn.cross_validation import train_test_split 
+from sklearn.grid_search import GridSearchCV
 
 
 def create_collocations_from_trainingset(series):
@@ -36,14 +37,20 @@ def category_dummies(df):
     return dummies 
 
 def random_forest_regressor(X_train, y_train): 
-    rfr = RandomForestRegressor(n_estimators= 250,max_features = 500 ,n_jobs = -1, random_state=42)
-    rfr.fit_transform(X_train, y_train) 
-    return rfr 
+    random_forest_grid = {'n_estimators':[x for x in range(50, 400, 50)], 'max_features': ['sqrt', 'log2', 'auto', '250', '500', '1000', '2000']}
+    rfr_gridsearch = GridSearchCV(RandomForestRegressor(), random_forest_grid, n_jobs = -1, verbose=True)
+    rfr_gridsearch.fit_transform(X_train, y_train)
+    print "best random forest regressor model:"
+    print rfr_gridsearch.best_params_
+    return rfr_gridsearch.best_estimator
 
 def random_forest_classifier(X_train, y_train):
-    rfc = RandomForestClassifier(n_estimators = 250, max_features = 500, n_jobs = -1, random_state=42)
-    rfc.fit_transform(X_train, y_train)
-    return rfc 
+    random_forest_grid = {'n_estimators':[x for x in range(50, 400, 50)], 'max_features': ['sqrt', 'log2', 'auto', '250', '500', '1000', '2000']}
+    rfc_gridsearch = GridSearchCV(RandomForestClassifier(), random_forest_grid, n_jobs = -1,  verbose=True)
+    rfc_gridsearch.fit_transform(X_train, y_train)
+    print 'best random forest classifier model:'
+    print rfc_gridsearch.best_params_
+    return rfc_gridsearch.best_estimator
 
 def gradient_boosting(X_train, y_train): 
     gb = GradientBoostingRegressor(n_jobs = -1, random_state=42)
@@ -82,12 +89,7 @@ if __name__=='__main__':
     y_train_clf = create_age_groups(y_train)
     y_test_clf = create_age_groups(y_test)	
 	
-
     rfc = random_forest_classifier(X_train, y_train_clf)
-    print 'Random Forest Classifer: accuracy'
-    print rfc.score(X_test, y_test_clf)
 	
     rfr = random_forest_regressor(X_train, y_train)
-    print 'Random Forest Regressor R^2:'
-    print rfr.score(X_test, y_test)
 
