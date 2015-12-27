@@ -43,10 +43,10 @@ def gradient_boosting(X_train, y_train):
     
 
 if __name__=='__main__':	
-    with open('training_data.pkl', 'rb') as fid:
-	training_data = cPickle.load(fid)
-    df = pd.concat([training_data[0], training_data[1]], axis=1)
-#    df = df.ix[df['age'] < 50, :]
+    with open('df_age_predict.pkl', 'rb') as fid:
+	df = cPickle.load(fid)
+    #df = pd.concat([training_data[0], training_data[1]], axis=1)
+    #df = df.ix[df['category_code'] == 'stp', :]
     target = df['age']
     #create tfidf matrix for total_text
     text_mat, text_features = tfidf_matrix(df['total_text'])
@@ -62,7 +62,7 @@ if __name__=='__main__':
     #add total text length as feature
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
-    total_mat = build_feature_matrix((text_mat, title_mat, np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
+    total_mat = build_feature_matrix((title_mat, np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
     X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size = 0.3)
 	
     #random forest
