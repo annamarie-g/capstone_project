@@ -31,7 +31,7 @@ def category_dummies(df):
     return dummies 
 
 def random_forest(X_train, y_train): 
-    rf = RandomForestRegressor(n_jobs = -1, random_state=42)
+    rf = RandomForestRegressor(n_estimators= 100,n_jobs = -1, random_state=42)
     rf.fit_transform(X_train, y_train) 
     return rf 
 
@@ -44,8 +44,8 @@ def gradient_boosting(X_train, y_train):
 if __name__=='__main__':	
     with open('training_data.pkl', 'rb') as fid:
 	training_data = cPickle.load(fid)
-    df = pd.concat(training_data[0], training_data[1], axis=1)
-    df = df.ix[df['age'] < 50, :]
+    df = pd.concat([training_data[0], training_data[1]], axis=1)
+#    df = df.ix[df['age'] < 50, :]
     target = df['age']
     #create tfidf matrix for total_text
     text_mat, text_features = tfidf_matrix(df['total_text'])
