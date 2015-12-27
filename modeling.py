@@ -15,7 +15,9 @@ from sklearn.grid_search import GridSearchCV
 
 
 def create_collocations_from_trainingset(series):
-    pass 
+    #calling for trainingset 
+    scored_bigrams, scored_trigrams =tp.find_collocations(series)
+    return scored_bigrams, scored_trigrams
  
 def tfidf_matrix(series):
     vectorizer = TfidfVectorizer(tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
@@ -62,6 +64,12 @@ def create_age_groups(series):
     age_group = pd.cut(series, range(5,95,10), right=False, labels = ["{0} - {1}".format(i, i+9) for i in range(5, 85, 10)])
     return age_group
 
+def reduce_dimensions(total_mat, n_topics):
+    #input is data matrix, shape (n_samples, n_features)
+    #returns W array, shape (n_samples, n_components)
+    nmf = NMF(n_components=n_topics, random_state=42).fit_transform(total_mat)
+    return nmf
+
 if __name__=='__main__':	
     with open('df_age_predict.pkl', 'rb') as fid:
 	df = cPickle.load(fid)
@@ -74,15 +82,16 @@ if __name__=='__main__':
     title_mat, title_features = tfidf_matrix(df['title'])
     cat_dummies = category_dummies(df)
     #create list of features 
-    total_features = []
+    #total_features = []
     #total_features.extend(text_features)
-    total_features.extend(title_features)
+    #total_features.extend(title_features)
  #   total_features.extend(cat_dummies.columns.tolist())	
-        
+     
     #add total text length as feature
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
-    total_mat = build_feature_matrix((text_mat, title_mat, cat_dummies, np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
+    total_mat = build_feature_matrix((text_mat, title_mat,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
+    total_mat = reduce_dimensions(total_mat, n_topics=10000)
     X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size = 0.3)
 
     #create age group on y_train and y_test 
