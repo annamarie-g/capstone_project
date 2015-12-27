@@ -39,7 +39,7 @@ def category_dummies(df):
 def random_forest_regressor(X_train, y_train): 
     random_forest_grid = {'n_estimators':[x for x in range(50, 400, 50)], 'max_features': ['sqrt', 'log2', 'auto', '250', '500', '1000', '2000']}
     rfr_gridsearch = GridSearchCV(RandomForestRegressor(), random_forest_grid, n_jobs = -1, verbose=True)
-    rfr_gridsearch.fit_transform(X_train, y_train)
+    rfr_gridsearch.fit(X_train, y_train)
     print "best random forest regressor model:"
     print rfr_gridsearch.best_params_
     return rfr_gridsearch.best_estimator
@@ -47,7 +47,7 @@ def random_forest_regressor(X_train, y_train):
 def random_forest_classifier(X_train, y_train):
     random_forest_grid = {'n_estimators':[x for x in range(50, 400, 50)], 'max_features': ['sqrt', 'log2', 'auto', '250', '500', '1000', '2000']}
     rfc_gridsearch = GridSearchCV(RandomForestClassifier(), random_forest_grid, n_jobs = -1,  verbose=True)
-    rfc_gridsearch.fit_transform(X_train, y_train)
+    rfc_gridsearch.fit(X_train, y_train)
     print 'best random forest classifier model:'
     print rfc_gridsearch.best_params_
     return rfc_gridsearch.best_estimator
@@ -66,13 +66,13 @@ if __name__=='__main__':
     with open('df_age_predict.pkl', 'rb') as fid:
 	df = cPickle.load(fid)
     #df = pd.concat([training_data[0], training_data[1]], axis=1)
-    #df = df.ix[df['category_code'] == 'stp', :]
+    #df = df.ix[df['category_code'] == 'm4w', :]
     target = df['age']
     #create tfidf matrix for total_text
     text_mat, text_features = tfidf_matrix(df['total_text'])
     #create tfidf matrix for titles 
     title_mat, title_features = tfidf_matrix(df['title'])
-#    cat_dummies = category_dummies(df)
+    cat_dummies = category_dummies(df)
     #create list of features 
     total_features = []
     #total_features.extend(text_features)
@@ -82,7 +82,7 @@ if __name__=='__main__':
     #add total text length as feature
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
-    total_mat = build_feature_matrix((text_mat, title_mat, np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
+    total_mat = build_feature_matrix((text_mat, title_mat, cat_dummies, np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
     X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size = 0.3)
 
     #create age group on y_train and y_test 
@@ -90,6 +90,14 @@ if __name__=='__main__':
     y_test_clf = create_age_groups(y_test)	
 	
     rfc = random_forest_classifier(X_train, y_train_clf)
+    rfc.transform(X_train, y_train_clf)
+    print "Best Random Forest Classifier Accuracy:"
+    print rfc.score(X_test, y_test_clf)
 	
     rfr = random_forest_regressor(X_train, y_train)
+    rfr.transform(X_train, y_train)
+    print "Best Random Forest Regressor R^2:"
+    print rfr.score(X_test, y_test)
+
+    
 
