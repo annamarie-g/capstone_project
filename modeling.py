@@ -36,12 +36,12 @@ def category_dummies(df):
     return dummies 
 
 def random_forest_regressor(X_train, y_train): 
-    rfr = RandomForestRegressor(n_estimators= 100,max_features = 'sqrt' ,n_jobs = -1, random_state=42)
+    rfr = RandomForestRegressor(n_estimators= 250,max_features = 500 ,n_jobs = -1, random_state=42)
     rfr.fit_transform(X_train, y_train) 
     return rfr 
 
 def random_forest_classifier(X_train, y_train):
-    rfc = RandomForestClassifier(n_estimators = 100, max_features = 'sqrt', n_jobs = -1, random_state=42)
+    rfc = RandomForestClassifier(n_estimators = 250, max_features = 500, n_jobs = -1, random_state=42)
     rfc.fit_transform(X_train, y_train)
     return rfc 
 
@@ -89,5 +89,5 @@ if __name__=='__main__':
 	
     rfr = random_forest_regressor(X_train, y_train)
     print 'Random Forest Regressor R^2:'
-    print rf.score(X_test, y_test)
+    print rfr.score(X_test, y_test)
 
