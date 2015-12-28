@@ -12,6 +12,7 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestClassifier 
 from sklearn.cross_validation import train_test_split 
 from sklearn.grid_search import GridSearchCV
+from sklearn.svm import LinearSVC
 
 
 def create_collocations_from_trainingset(series):
@@ -58,7 +59,21 @@ def gradient_boosting(X_train, y_train):
     gb = GradientBoostingRegressor(max_features = 'sqrt', random_state=42)
     gb.fit_transform(X_train, y_train) 
     return gb 
-   
+
+def linear_svc(X_train, y_train_clf):
+    #linear support vector classification
+    parameters = {'C': [0.0001, 0.1, 100], 'loss':['l1', 'l2']}
+    est = LinearSVC()
+    clf = GridSearchCV(est, parameters, cv=2, n_jobs = -1) 
+    clf.fit(X_train, y_train_clf)
+    print 'best model:'
+    print clf.best_estimator_
+    print 'best score:' 
+    print clf.best_score_
+    print 'grid scores:' 
+    print clf.grid_scores_     
+    return clf.best_estimator_
+
 def create_age_groups(series):
     #cut into age groups 
     age_group = pd.cut(series, range(5,95,10), right=False, labels = ["{0} - {1}".format(i, i+9) for i in range(5, 85, 10)])
@@ -100,18 +115,21 @@ def create_featurespace(df):
 if __name__=='__main__':	
     df, target = get_data()
     total_mat = create_featurespace(df)
-    total_mat = reduce_dimensions(total_mat, n_topics=10000)
+#    total_mat = reduce_dimensions(total_mat, n_topics=10000)
     X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size = 0.3)
 
     #create age group on y_train and y_test 
     y_train_clf = create_age_groups(y_train)
     y_test_clf = create_age_groups(y_test)	
 
+    svm_clf = linear_svc(X_train, y_train_clf)
+    svm_clf.score(X_test, y_test_clf)
+
+'''
     gb = gradient_boosting(X_train.todense(), y_train)
     print 'Gradient Boosted Model:'
     print gb.score(X_train, y_train) 
 
-'''	
     rfc = random_forest_classifier(X_train, y_train_clf)
     rfc.transform(X_train, y_train_clf)
     print "Best Random Forest Classifier Accuracy:"
