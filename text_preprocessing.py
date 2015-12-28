@@ -63,14 +63,14 @@ def find_collocations(text_series):
     with open('trigrams.pkl', 'wb') as fid:
         cPickle.dump(scored_trigrams, fid)
 
-def mwe_tokenize(text_series):
+def mwe_tokenize(text):
     #Retokenizes tokenized text to combine MWEs from list of most common
-    with open('trigrams.pkl', 'rb') as fid:
+    with open('bigrams_MWEs.pkl', 'rb') as fid:
         trigrams = cPickle.load(fid) 
 
-    tokenizer = MWETokenizer(trigrams, separator='+')
-    text_series.map(tokenizer)
-    return text_series 
+    tokenizer = MWETokenizer(mwes= bigrams[:500], separator='+')
+    text = tokenizer.tokenize(text)
+    return text 
 
 def normalize(): 
     #add number of corrections as a feature

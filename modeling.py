@@ -21,7 +21,7 @@ def create_collocations_from_trainingset(series):
     return scored_bigrams, scored_trigrams
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
+    vectorizer = TfidfVectorizer(max_df = 0.95, min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
