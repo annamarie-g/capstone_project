@@ -1,4 +1,5 @@
 import numpy as np 
+import cPickle
 import pandas as pd 
 import re 
 import string 
@@ -18,7 +19,7 @@ def tokenize(series):
     token_series = series.map(custom_tokenizer)
     return token_series
 
-def custom_preprocessor(test):
+def custom_preprocessor(text):
     #remove breaklines 
     text = re.sub('\n', ' ', text)
     #spell 420
@@ -55,13 +56,19 @@ def find_collocations(text_series):
     bigrams = BigramCollocationFinder.from_words(tokens)
     trigrams  = TrigramCollocationFinder.from_words(tokens)
     scored_bigrams = bigrams.score_ngrams(bigram_measures.likelihood_ratio)
-    score_trigrams = trigrams.score_ngrams(trigram_measures.likelihood_ratio)
-    #return MWEs 
-    return scored_bigrams, scored_trigrams 
+    scored_trigrams = trigrams.score_ngrams(trigram_measures.likelihood_ratio)
+    #save to pickle
+    with open('bigrams.pkl', 'wb') as fid:
+        cPickle.dump(scored_bigrams,fid)
+    with open('trigrams.pkl', 'wb') as fid:
+        cPickle.dump(scored_trigrams, fid)
 
-def mwe_tokenize(text_series, MWEs):
+def mwe_tokenize(text_series):
     #Retokenizes tokenized text to combine MWEs from list of most common
-    tokenizer = MWETokenizer(MWEs, separator='+')
+    with open('trigrams.pkl', 'rb') as fid:
+        trigrams = cPickle.load(fid) 
+
+    tokenizer = MWETokenizer(trigrams, separator='+')
     text_series.map(tokenizer)
     return text_series 
 
