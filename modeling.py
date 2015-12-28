@@ -45,7 +45,7 @@ def random_forest_regressor(X_train, y_train):
     rfr_gridsearch.fit(X_train, y_train)
     print "best random forest regressor model:"
     print rfr_gridsearch.best_params_
-    return rfr_gridsearch.best_estimator
+    return rfr_gridsearch.best_estimator_
 
 def random_forest_classifier(X_train, y_train):
     random_forest_grid = {'n_estimators':[x for x in range(50, 400, 50)], 'max_features': ['sqrt', 'log2', 'auto', '250', '500', '1000', '2000']}
@@ -53,7 +53,7 @@ def random_forest_classifier(X_train, y_train):
     rfc_gridsearch.fit(X_train, y_train)
     print 'best random forest classifier model:'
     print rfc_gridsearch.best_params_
-    return rfc_gridsearch.best_estimator
+    return rfc_gridsearch.best_estimator_
 
 def gradient_boosting(X_train, y_train): 
     gb = GradientBoostingRegressor(max_features = 'sqrt', random_state=42)
@@ -121,14 +121,14 @@ if __name__=='__main__':
     #create age group on y_train and y_test 
     y_train_clf = create_age_groups(y_train)
     y_test_clf = create_age_groups(y_test)	
-
+'''
     svm_clf = linear_svc(X_train, y_train_clf)
     svm_clf.score(X_test, y_test_clf)
 
-'''
     gb = gradient_boosting(X_train.todense(), y_train)
     print 'Gradient Boosted Model:'
     print gb.score(X_train, y_train) 
+'''
 
     rfc = random_forest_classifier(X_train, y_train_clf)
     rfc.transform(X_train, y_train_clf)
