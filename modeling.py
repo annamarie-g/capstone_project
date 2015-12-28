@@ -17,11 +17,10 @@ from sklearn.grid_search import GridSearchCV
 def create_collocations_from_trainingset(series):
     #calling for trainingset 
     scored_bigrams, scored_trigrams =tp.find_collocations(series)
-    with open('collocations.pkl'
     return scored_bigrams, scored_trigrams
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(preprocessor = tp.custompreprocessor, tokenizer = tp.custom_tokenizer( bigrams = bigrams, trigrams = trigrams,), stop_words=stopwords.words('english'), lowercase=True)
+    vectorizer = TfidfVectorizer(preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -56,7 +55,7 @@ def random_forest_classifier(X_train, y_train):
     return rfc_gridsearch.best_estimator
 
 def gradient_boosting(X_train, y_train): 
-    gb = GradientBoostingRegressor(n_jobs = -1, random_state=42)
+    gb = GradientBoostingRegressor(max_features = 'sqrt', random_state=42)
     gb.fit_transform(X_train, y_train) 
     return gb 
    
@@ -92,13 +91,18 @@ if __name__=='__main__':
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
     total_mat = build_feature_matrix((text_mat, title_mat,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
-    total_mat = reduce_dimensions(total_mat, n_topics=1000)
+    #total_mat = reduce_dimensions(total_mat, n_topics=1000)
     X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size = 0.3)
 
     #create age group on y_train and y_test 
     y_train_clf = create_age_groups(y_train)
     y_test_clf = create_age_groups(y_test)	
-	
+
+    gb = gradient_boosting(X_train.todense(), y_train)
+    print 'Gradient Boosted Model:'
+    print gb.score(X_train, y_train) 
+
+'''	
     rfc = random_forest_classifier(X_train, y_train_clf)
     rfc.transform(X_train, y_train_clf)
     print "Best Random Forest Classifier Accuracy:"
@@ -108,6 +112,4 @@ if __name__=='__main__':
     rfr.transform(X_train, y_train)
     print "Best Random Forest Regressor R^2:"
     print rfr.score(X_test, y_test)
-
-    
-
+'''

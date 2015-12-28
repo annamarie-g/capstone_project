@@ -18,7 +18,7 @@ def tokenize(series):
     token_series = series.map(custom_tokenizer)
     return token_series
 
-def custom_preprocessor(test):
+def custom_preprocessor(text):
     #remove breaklines 
     text = re.sub('\n', ' ', text)
     #spell 420
