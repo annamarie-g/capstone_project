@@ -91,7 +91,7 @@ if __name__=='__main__':
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
     total_mat = build_feature_matrix((text_mat, title_mat,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
-    total_mat = reduce_dimensions(total_mat, n_topics=10000)
+    total_mat = reduce_dimensions(total_mat, n_topics=1000)
     X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size = 0.3)
 
     #create age group on y_train and y_test 
