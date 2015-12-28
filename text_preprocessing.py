@@ -18,15 +18,19 @@ def tokenize(series):
     token_series = series.map(custom_tokenizer)
     return token_series
 
-def custom_tokenizer(text):
+def custom_preprocessor(test):
     #remove breaklines 
     text = re.sub('\n', ' ', text)
     #spell 420
     text = re.sub('420', 'fourtwenty', text)
     #remove all numbers 
     text = re.sub('[0-9]', ' ', text)
+    return text 
+
+def custom_tokenizer(text):
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
     tokens = tokenizer.tokenize(text)
+
     return tokens
 
 def remove_escape_sequences(text): 
@@ -48,15 +52,15 @@ def find_collocations(text_series):
     bigram_measures = BigramAssocMeasures()
     trigram_measures = TrigramAssocMeasures()
     tokens = [token for token_list in text_series for token in token_list]
-    bigram_MWEs = BigramCollocationFinder.from_words(tokens)
-    trigram_MWEs = TrigramCollocationFinder.from_words(tokens)
-    #returns list of MWEs
+    bigrams = BigramCollocationFinder.from_words(tokens)
+    trigrams  = TrigramCollocationFinder.from_words(tokens)
+    scored_bigrams = bigrams.score_ngrams(bigram_measures.likelihood_ratio)
+    score_trigrams = trigrams.score_ngrams(trigram_measures.likelihood_ratio)
     #return MWEs 
-    return bigram_MWEs, trigram_MWEs 
+    return scored_bigrams, scored_trigrams 
 
-def mwe_tokenize(text_series):
+def mwe_tokenize(text_series, MWEs):
     #Retokenizes tokenized text to combine MWEs from list of most common
-    MWEs  = find_collocations(text_series)
     tokenizer = MWETokenizer(MWEs, separator='+')
     text_series.map(tokenizer)
     return text_series 
