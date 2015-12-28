@@ -17,10 +17,11 @@ from sklearn.grid_search import GridSearchCV
 def create_collocations_from_trainingset(series):
     #calling for trainingset 
     scored_bigrams, scored_trigrams =tp.find_collocations(series)
+    with open('collocations.pkl'
     return scored_bigrams, scored_trigrams
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
+    vectorizer = TfidfVectorizer(preprocessor = tp.custompreprocessor, tokenizer = tp.custom_tokenizer( bigrams = bigrams, trigrams = trigrams,), stop_words=stopwords.words('english'), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
