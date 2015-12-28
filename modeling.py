@@ -40,7 +40,7 @@ def category_dummies(df):
     return dummies 
 
 def random_forest_regressor(X_train, y_train): 
-    random_forest_grid = {'n_estimators':[x for x in range(50, 400, 50)], 'max_features': ['sqrt', 'log2', 'auto', '250', '500', '1000', '2000']}
+    random_forest_grid = {'n_estimators':[x for x in range(150, 300, 50)], 'max_features': ['sqrt', 'log2', '2000']}
     rfr_gridsearch = GridSearchCV(RandomForestRegressor(), random_forest_grid, n_jobs = -1, verbose=True)
     rfr_gridsearch.fit(X_train, y_train)
     print "best random forest regressor model:"
@@ -122,7 +122,7 @@ def reduce_dimensions(total_mat, n_topics):
     return nmf
 
 def get_data():
-    with open('df_age_predict.pkl', 'rb') as fid:
+    with open('df_age_predict_edited.pkl', 'rb') as fid:
 	df = cPickle.load(fid)
     #df = pd.concat([training_data[0], training_data[1]], axis=1)
     #df = df.ix[df['category_code'] == 'm4w', :]
@@ -144,7 +144,7 @@ def create_featurespace(df):
     #add total text length as feature
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
-    total_mat = build_feature_matrix((text_mat, cat_dummies, title_mat,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
+    total_mat = build_feature_matrix((text_mat, title_mat, cat_dummies,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
     return total_mat 	
 
 if __name__=='__main__':	
@@ -158,14 +158,19 @@ if __name__=='__main__':
     y_train_clf = create_age_groups(y_train)
     y_test_clf = create_age_groups(y_test)	
 
+    rfr = random_forest_regressor(X_train, y_train)
+    rfr.transform(X_train, y_train)
+    print "Best Random Forest Regressor R^2:"
+    print rfr.score(X_test, y_test)
+
+
+'''
     svm_reg = linear_svr(X_train, y_train)
     svm_reg.score(X_test, y_test)
 
     reg = svr_rbf(X_train, y_train)
     print 'Best svc classifier accuracy:' 
     print reg.score(X_test, y_test) 
-
-'''
 
     clf = svc_rbf(X_train, y_train_clf)
     print 'Best svc classifier accuracy:' 
