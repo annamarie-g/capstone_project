@@ -134,7 +134,7 @@ if __name__=='__main__':
     df = drop_stuff(df) 
     df = combine_stds(df)
     df = num_attributes(df) 
-    df = create_age_groups(df)
+    #df = create_age_groups(df)
     #df = df.ix[df.age.notnull(), :]
     df = create_total_text(df)
     df.drop(['smokes','drinks', 'drugs', 'height', 'area', 'notices', 'post_id', 'repost_of', 'scrape_time'], axis=1, inplace=True)
