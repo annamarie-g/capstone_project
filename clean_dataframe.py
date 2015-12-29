@@ -135,8 +135,9 @@ if __name__=='__main__':
     df = combine_stds(df)
     df = num_attributes(df) 
     df = create_age_groups(df)
-    df = df.ix[df.age.notnull(), :]
+    #df = df.ix[df.age.notnull(), :]
     df = create_total_text(df)
     df.drop(['smokes','drinks', 'drugs', 'height', 'area', 'notices', 'post_id', 'repost_of', 'scrape_time'], axis=1, inplace=True)
-    df = get_english_posts(df)
+    #df = get_english_posts(df)
     df = df.set_index(np.arange(df.shape[0]))
+    df.to_pickle('dataframe_for_eda.pkl')
