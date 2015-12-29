@@ -32,9 +32,9 @@ def custom_preprocessor(text):
 def custom_tokenizer(text, bigrams=None):
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
     tokens = tokenizer.tokenize(text)
+    tokens = mwe_tokenize(tokens, bigrams)
     stemmer = SnowballStemmer('english', ignore_stopwords=True)
     tokens = [stemmer.stem(token) for token in tokens]
-    tokens = mwe_tokenize(tokens, bigrams)
     return tokens
 
 def remove_escape_sequences(text): 
