@@ -81,9 +81,9 @@ def svc_rbf(X_train, y_train_clf):
     return clf.best_estimator_
 
 def svr_rbf(X_train, y_train):
-    parameters = {'C': [0.0001, 0.1, 100], 'loss':['l1', 'l2']}
+    parameters = {'C': [0.0001, 0.1, 100]}
     est = SVR(kernel='rbf')
-    reg = GridSearchCV(est, parameters, cv=2, n_jobs=-1)
+    reg = GridSearchCV(est, parameters, cv=2, n_jobs=-1, verbose = True)
     reg.fit(X_train, y_train)
     print 'Best SVR estimator:'
     print reg.best_estimator_
@@ -107,9 +107,9 @@ def linear_svc(X_train, y_train_clf):
 
 def linear_svr(X_train, y_train):
     #linear support vector classification
-    parameters = {'C': [0.0001,.005, 0.1, 100], 'loss':['l1', 'l2']}
+    parameters = {'C': [0.0001,.005, 0.1, 10,  100]}
     est = LinearSVR()
-    clf = GridSearchCV(est, parameters, cv=2, n_jobs = -1) 
+    clf = GridSearchCV(est, parameters, cv=2, n_jobs = -1, verbose = True) 
     clf.fit(X_train, y_train)
     print 'best model:'
     print clf.best_estimator_
@@ -162,6 +162,8 @@ if __name__=='__main__':
 
 
     reg = svr_rbf(X_train, y_train)
+    with open('svr_rbf.pkl', 'wb') as fid:
+	cPickle.dump(reg, fid)
     print 'Best svc classifier accuracy:' 
     print reg.score(X_test, y_test) 
 
