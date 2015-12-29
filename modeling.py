@@ -14,14 +14,17 @@ from sklearn.cross_validation import train_test_split
 from sklearn.grid_search import GridSearchCV
 from sklearn.svm import LinearSVC, SVC, SVR, LinearSVR
 
-
 def create_collocations_from_trainingset(series):
     #calling for trainingset 
     scored_bigrams, scored_trigrams =tp.find_collocations(series)
     return scored_bigrams, scored_trigrams
  
 def tfidf_matrix(series):
+    with open('bigrams_MWEs.pkl', 'rb') as fid:
+        bigrams = cPickle.load(fid) 
+
     vectorizer = TfidfVectorizer(max_df = 0.95, min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
+
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 

@@ -9,6 +9,7 @@ from nltk.tokenize import TweetTokenizer
 from nltk.tokenize.mwe import MWETokenizer
 from nltk.collocations import BigramAssocMeasures, BigramCollocationFinder
 from nltk.collocations import TrigramAssocMeasures, TrigramCollocationFinder
+from nltk.stem.snowball  import SnowballStemmer 
 
 #df.apply is for operations on rows/columns
 #df.applymap is for applying a function elementwise on dataframe 
@@ -28,10 +29,12 @@ def custom_preprocessor(text):
     text = re.sub('[0-9]', ' ', text)
     return text 
 
-def custom_tokenizer(text):
+def custom_tokenizer(text, bigrams=None):
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
     tokens = tokenizer.tokenize(text)
-
+    stemmer = SnowballStemmer('english', ignore_stopwords=True)
+    tokens = [stemmer.stem(token) for token in tokens]
+    #tokens = mwe_tokenize(tokens, bigrams)
     return tokens
 
 def remove_escape_sequences(text): 
@@ -63,14 +66,14 @@ def find_collocations(text_series):
     with open('trigrams.pkl', 'wb') as fid:
         cPickle.dump(scored_trigrams, fid)
 
-def mwe_tokenize(text):
+def mwe_tokenize(tokens, bigrams):
     #Retokenizes tokenized text to combine MWEs from list of most common
-    with open('bigrams_MWEs.pkl', 'rb') as fid:
-        trigrams = cPickle.load(fid) 
+#    with open('bigrams_MWEs.pkl', 'rb') as fid:
+ #       bigrams = cPickle.load(fid) 
 
-    tokenizer = MWETokenizer(mwes= bigrams[:500], separator='+')
-    text = tokenizer.tokenize(text)
-    return text 
+    tokenizer = MWETokenizer(mwes= bigrams[:100], separator='+')
+    tokens = tokenizer.tokenize(tokens)
+    return tokens 
 
 def normalize(): 
     #add number of corrections as a feature
