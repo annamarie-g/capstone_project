@@ -18,12 +18,15 @@ def create_collocations_from_trainingset(series):
     #calling for trainingset 
     scored_bigrams, scored_trigrams =tp.find_collocations(series)
     return scored_bigrams, scored_trigrams
- 
-def tfidf_matrix(series):
+
+def tokenizer_helper(text):
     with open('bigrams_MWEs.pkl', 'rb') as fid:
         bigrams = cPickle.load(fid) 
+    tokens = tp.custom_tokenizer(text, bigrams)
+    return tokens 
 
-    vectorizer = TfidfVectorizer(max_df = 0.95, min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
+def tfidf_matrix(series):
+    vectorizer = TfidfVectorizer(max_df = 0.95, min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tokenizer_helper,  stop_words=stopwords.words('english'), lowercase=True)
 
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
@@ -43,8 +46,8 @@ def category_dummies(df):
     return dummies 
 
 def random_forest_regressor(X_train, y_train): 
-    random_forest_grid = {'n_estimators':[x for x in range(150, 300, 50)], 'max_features': ['sqrt', 'log2', '2000']}
-    rfr_gridsearch = GridSearchCV(RandomForestRegressor(), random_forest_grid, n_jobs = -1, verbose=True)
+    random_forest_grid = {'n_estimators':[x for x in range(150, 300, 50)], 'max_features': ['auto', 'sqrt', 'log2', '2000']}
+    rfr_gridsearch = GridSearchCV(RandomForestRegressor(),random_forest_grid, scoring = 'mean_squared_error', n_jobs = -1, verbose=True)
     rfr_gridsearch.fit(X_train, y_train)
     print "best random forest regressor model:"
     print rfr_gridsearch.best_params_
@@ -161,6 +164,7 @@ if __name__=='__main__':
     y_train_clf = create_age_groups(y_train)
     y_test_clf = create_age_groups(y_test)	
 
+    print "Random Forest Regressor using collocations"
     rfr = random_forest_regressor(X_train, y_train)
     rfr.transform(X_train, y_train)
     print "Best Random Forest Regressor R^2:"

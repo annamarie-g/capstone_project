@@ -34,7 +34,7 @@ def custom_tokenizer(text, bigrams=None):
     tokens = tokenizer.tokenize(text)
     stemmer = SnowballStemmer('english', ignore_stopwords=True)
     tokens = [stemmer.stem(token) for token in tokens]
-    #tokens = mwe_tokenize(tokens, bigrams)
+    tokens = mwe_tokenize(tokens, bigrams)
     return tokens
 
 def remove_escape_sequences(text): 
