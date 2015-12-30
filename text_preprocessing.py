@@ -33,9 +33,11 @@ def custom_tokenizer(text, bigrams=None):
     chunks = text.split('-')
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
     tokens = [subchunk for chunk in chunks for subchunk in tokenizer.tokenize(chunk)]
+    if bigrams:
+    	tokens = mwe_tokenize(tokens, bigrams)
+
     stemmer = SnowballStemmer('english', ignore_stopwords=True)
     tokens = [stemmer.stem(token) for token in tokens]
-    #tokens = mwe_tokenize(tokens, bigrams)
     return tokens
 
 def remove_escape_sequences(text): 
@@ -53,6 +55,8 @@ def add_pos_usage(df):
     pass
 
 def find_collocations(text_series): 
+    #use stemmed collocations to tokenizer
+    #text_series= text_series.map(custom_tokenizer)
     #use nltk.collocations to find the most commonly occuring bigrams and trigrams
     bigram_measures = BigramAssocMeasures()
     trigram_measures = TrigramAssocMeasures()

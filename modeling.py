@@ -161,11 +161,6 @@ if __name__=='__main__':
     #y_test_clf = create_age_groups(y_test)	
 
 
-    reg = svr_rbf(X_train, y_train)
-    with open('svr_rbf.pkl', 'wb') as fid:
-	cPickle.dump(reg, fid)
-    print 'Best svc classifier accuracy:' 
-    print reg.score(X_test, y_test) 
 
 '''
     rfr = random_forest_regressor(X_train, y_train)
