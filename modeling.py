@@ -27,7 +27,7 @@ def custom_stop_words():
     return stop_words
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(max_df = 0.95, min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=custom_stop_words(), lowercase=True)
+    vectorizer = TfidfVectorizer(max_df = 0.50, min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=custom_stop_words(), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
