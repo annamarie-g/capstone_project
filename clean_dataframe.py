@@ -3,11 +3,11 @@ import pandas as pd
 import numpy as np 
 #for detecting langugage
 import nltk
-nltk.download()
+#nltk.download()
 from nltk.corpus import stopwords
 from nltk import wordpunct_tokenize
 import re 
-
+import dateutil
 #df.apply is for operations on rows/columns
 #df.applymap is for applying a function elementwise on dataframe 
 #series.map is for applying function elementwise on series 
@@ -124,8 +124,11 @@ def time_str_to_datetime(df):
     df['post_time'] = df['post_time'].apply(dateutil.parser.parse) 
     #for updated time, need to apply only to non null values 
 #    df['post_updated_time'] = df['post_updated_time'].apply(dateutil.parser.parse) 
-    df['post_time_of_day'] = df['post_time'].apply(lambda x: x.time())
+    df['time'] = df['post_time'].apply(lambda x: x.time())
  #   df['post_updated_time_of_day'] = df['post_updated_time'].apply(lambda x: x.time())
+    
+    df['day'] = df['post_time'].apply(lambda x: x.date()) 
+    df['weekday'] = df['post_time'].apply(lambda x: x.weekday()) 
     return df
 
 if __name__=='__main__':
