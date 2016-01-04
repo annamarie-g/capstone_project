@@ -28,7 +28,7 @@ def topic_word_freq(topics, idx, feature_names):
 	return zip(feature_names, frequencies) 
 
 def get_data():
-    with open('dataframe_for_eda_edited.pkl', 'rb') as fid:
+    with open('dataframe_for_eda.pkl', 'rb') as fid:
 	df = cPickle.load(fid)
     return df
 
@@ -45,30 +45,24 @@ def reduce_dimensions(total_mat, n_topics):
 if __name__=='__main__':
     df = get_data()
     mask_path = False
-   #Use tfidf features for NMF
+    #Use tfidf features for NMF
     for category in df.category_code.unique().tolist():
-	if category == 'w4m':
-		#df_cat = df.ix[df['category_code']==category, :]
-		text_mat, text_features = md.tfidf_matrix(df.ix[df['category_code'] == category, 'total_text'])
-		#Fit NMF
-		n_samples = text_mat.shape[0]
-		n_features = text_mat.shape[1]
-		n_topics = 10 
-		n_top_words = 100
-		print category 
-		print 'Fitting the NMF model with tf-idf features'
-		nmf = reduce_dimensions(text_mat, n_topics) 
+        if category == 'w4m':
+            #df_cat = df.ix[df['category_code']==category, :]
+            text_mat, text_features = md.tfidf_matrix(df.ix[df['category_code'] == category, 'total_text'])
+            #Fit NMF
+            n_samples = text_mat.shape[0]
+            n_features = text_mat.shape[1]
+            n_topics = 10 
+            n_top_words = 150
+            print category 
+            print 'Fitting the NMF model with tf-idf features'
+            nmf = reduce_dimensions(text_mat, n_topics) 
+            print_top_tokens(nmf,text_features,n_top_words, category)
 
-		print_top_tokens(nmf,text_features,n_top_words, category)
-	
-		word_freq = topic_word_freq(nmf.components_,4, text_features)
-	
-		if mask_path:
-    		    mask = np.array(Image.open(mask_path))
-    		    wc = WordCloud(background_color='white', max_words=max_words, width=1900, height=500, mask=mask)
-else:
-   		    wc = WordCloud(background_color='white', max_words=max_words, width=1900, height=500)
-		    wc.fit_words(word_freq)
-		    plt.imshow(wc)
-		    plt.axis('off')
-plt.show()	
+            word_freq = topic_word_freq(nmf.components_,6, text_features)
+            wc = WordCloud(background_color='white', max_words=n_top_words, width=1200, height=1200)
+            wc.fit_words(word_freq)
+            plt.imshow(wc)
+            plt.axis('off')
+            plt.show()	
