@@ -29,7 +29,7 @@ def helper_tokenizer(text):
     return tokens 
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(max_df = 0.40,  min_df = 10, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
+    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 50,  preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -64,7 +64,7 @@ def random_forest_classifier(X_train, y_train):
     return rfc_gridsearch.best_estimator_
 
 def gradient_boosting(X_train, y_train): 
-    gb = GradientBoostingRegressor(presort = True, learning_rate = 0.075, max_depth = 10, n_estimators = 400, verbose=True, max_features = 'sqrt', random_state=42)
+    gb = GradientBoostingRegressor(presort = True, learning_rate = 0.075, max_depth = 10, n_estimators = 400, verbose=True, max_features = 3000, random_state=42)
     gb.fit_transform(X_train, y_train) 
     return gb 
 
@@ -167,13 +167,13 @@ if __name__=='__main__':
     gb = gradient_boosting(X_train.todense(), y_train)
     print 'Gradient Boosted Model:'
     print gb.score(X_test.todense(), y_test) 
-    with open('model2.pkl', 'wb') as fid:
+    with open('model3.pkl', 'wb') as fid:
 	cPickle.dump(gb, fid) 
-    with open('X_test.pkl', 'wb') as fid: 
+    with open('X_test3.pkl', 'wb') as fid: 
 	cPickle.dump(X_test, fid) 
-    with open('y_test.pkl', 'wb') as fid: 
+    with open('y_test3.pkl', 'wb') as fid: 
 	cPickle.dump(y_test, fid) 
-    with open('features.pkl', 'wb') as fid:
+    with open('features3.pkl', 'wb') as fid:
 	cPickle.dump(features, fid) 
 '''
     svm_reg = linear_svr(X_train, y_train)
