@@ -30,6 +30,10 @@ def custom_preprocessor(text):
     return text 
 
 def custom_tokenizer(text, bigrams=None):
+
+    #trans_table = dict((ord(char), None) for char in string.punctuation)
+    #remove all punctuation
+    #text = text.translate(trans_table)
     chunks = text.split('-')
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
     tokens = tokenizer.tokenize(text)
@@ -37,9 +41,12 @@ def custom_tokenizer(text, bigrams=None):
     stemmer = SnowballStemmer('english', ignore_stopwords=True)
     tokens = [stemmer.stem(token) for token in tokens]
     tokens = [subchunk for chunk in chunks for subchunk in tokenizer.tokenize(chunk)]
+    tokens = [token for token in tokens if token.isalpha()]
+    if bigrams:
+    	tokens = mwe_tokenize(tokens, bigrams)
+
     stemmer = SnowballStemmer('english', ignore_stopwords=True)
     tokens = [stemmer.stem(token) for token in tokens]
-    #tokens = mwe_tokenize(tokens, bigrams)
     return tokens
 
 def remove_escape_sequences(text): 
@@ -57,6 +64,8 @@ def add_pos_usage(df):
     pass
 
 def find_collocations(text_series): 
+    #use stemmed collocations to tokenizer
+    #text_series= text_series.map(custom_tokenizer)
     #use nltk.collocations to find the most commonly occuring bigrams and trigrams
     bigram_measures = BigramAssocMeasures()
     trigram_measures = TrigramAssocMeasures()
