@@ -13,6 +13,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.cross_validation import train_test_split 
 from sklearn.grid_search import GridSearchCV
 from sklearn.svm import LinearSVC, SVC, SVR, LinearSVR
+from sklearn.utils import shuffle 
 
 
 def create_collocations_from_trainingset(series):
@@ -28,7 +29,7 @@ def helper_tokenizer(text):
     return tokens 
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(max_df = 0.70, min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
+    vectorizer = TfidfVectorizer(max_df = 0.40,  min_df = 10, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -63,7 +64,7 @@ def random_forest_classifier(X_train, y_train):
     return rfc_gridsearch.best_estimator_
 
 def gradient_boosting(X_train, y_train): 
-    gb = GradientBoostingRegressor(n_estimators = 250, verbose=True, max_features = 'sqrt', random_state=42)
+    gb = GradientBoostingRegressor(max_depth = 10, n_estimators = 400, verbose=True, max_features = 'sqrt', random_state=42)
     gb.fit_transform(X_train, y_train) 
     return gb 
 
@@ -132,7 +133,7 @@ def get_data():
     with open('df_age_predict_edited.pkl', 'rb') as fid:
 	df = cPickle.load(fid)
     #df = pd.concat([training_data[0], training_data[1]], axis=1)
-    df = df.ix[df['category_code'] == 'm4w', :]
+    #df = df.ix[df['category_code'] == 'm4w', :]
     target = df.pop('age')
     return df, target
     
@@ -142,28 +143,38 @@ def create_featurespace(df):
     text_mat, text_features = tfidf_matrix(df['total_text'])
     #create tfidf matrix for titles 
     #title_mat, title_features = tfidf_matrix(df['title'])
-    #cat_dummies = category_dummies(df)
+    cat_dummies = category_dummies(df)
     #create list of features 
     total_features = []
     total_features.extend(text_features)
     #total_features.extend(title_features)
-    #total_features.extend(cat_dummies.columns.tolist())	
+    total_features.extend(cat_dummies.columns.tolist())	
     #add total text length as feature
-    #df['total_text_length'] = df['total_text'].map(len)
+    df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
-    #total_mat = build_feature_matrix((text_mat, title_mat, cat_dummies,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
-    return text_mat 	
+    total_mat = build_feature_matrix((text_mat, cat_dummies,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
+    return text_mat, total_features  	
 
 if __name__=='__main__':	
     df, target = get_data()
-    total_mat = create_featurespace(df)
+    
+    total_mat, features  = create_featurespace(df)
 #    total_mat = reduce_dimensions(total_mat, n_topics=10000)
-
+    
+    total_mat, target = shuffle(total_mat, target)
     X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size = 0.3)
 
     gb = gradient_boosting(X_train.todense(), y_train)
     print 'Gradient Boosted Model:'
-    print gb.score(X_train.toarray(), y_train) 
+    print gb.score(X_test.todense(), y_test) 
+    with open('model2.pkl', 'wb') as fid:
+	cPickle.dump(gb, fid) 
+    with open('X_test.pkl', 'wb') as fid: 
+	cPickle.dump(X_test, fid) 
+    with open('y_test.pkl', 'wb') as fid: 
+	cPickle.dump(y_test, fid) 
+    with open('features.pkl', 'wb') as fid:
+	cPickle.dump(features, fid) 
 '''
     svm_reg = linear_svr(X_train, y_train)
     svm_reg.score(X_test, y_test)

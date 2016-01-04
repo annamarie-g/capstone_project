@@ -30,9 +30,14 @@ def custom_preprocessor(text):
     return text 
 
 def custom_tokenizer(text, bigrams=None):
+
+    #trans_table = dict((ord(char), None) for char in string.punctuation)
+    #remove all punctuation
+    #text = text.translate(trans_table)
     chunks = text.split('-')
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
     tokens = [subchunk for chunk in chunks for subchunk in tokenizer.tokenize(chunk)]
+    tokens = [token for token in tokens if token.isalpha()]
     if bigrams:
     	tokens = mwe_tokenize(tokens, bigrams)
 
