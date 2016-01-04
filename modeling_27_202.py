@@ -64,7 +64,7 @@ def random_forest_classifier(X_train, y_train):
     return rfc_gridsearch.best_estimator_
 
 def gradient_boosting(X_train, y_train): 
-    gb = GradientBoostingRegressor(max_depth = 10, n_estimators = 400, verbose=True, max_features = 'sqrt', random_state=42)
+    gb = GradientBoostingRegressor(presort = True, learning_rate = 0.075, max_depth = 10, n_estimators = 400, verbose=True, max_features = 'sqrt', random_state=42)
     gb.fit_transform(X_train, y_train) 
     return gb 
 
