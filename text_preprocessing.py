@@ -35,7 +35,7 @@ def custom_tokenizer(text, bigrams=None):
     tokens = tokenizer.tokenize(text)
     #tokens = mwe_tokenize(tokens, bigrams)
     #stemmer = SnowballStemmer('english', ignore_stopwords=True)
-    tokens = [stemmer.stem(token) for token in tokens]
+    #tokens = [stemmer.stem(token) for token in tokens]
     tokens = [subchunk for chunk in chunks for subchunk in tokenizer.tokenize(chunk)]
     tokens = [token for token in tokens if token.isalpha()]
     if bigrams:
