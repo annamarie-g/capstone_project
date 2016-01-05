@@ -30,20 +30,21 @@ def custom_preprocessor(text):
     return text 
 
 def custom_tokenizer(text, bigrams=None):
-
-    #trans_table = dict((ord(char), None) for char in string.punctuation)
-    #remove all punctuation
-    #text = text.translate(trans_table)
     chunks = text.split('-')
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
+    tokens = tokenizer.tokenize(text)
+    tokens = mwe_tokenize(tokens, bigrams)
+    stemmer = SnowballStemmer('english', ignore_stopwords=True)
+    tokens = [stemmer.stem(token) for token in tokens]
     tokens = [subchunk for chunk in chunks for subchunk in tokenizer.tokenize(chunk)]
     tokens = [token for token in tokens if token.isalpha()]
     if bigrams:
     	tokens = mwe_tokenize(tokens, bigrams)
-
-    stemmer = SnowballStemmer('english', ignore_stopwords=True)
-    tokens = [stemmer.stem(token) for token in tokens]
-    return tokens
+    #force conversion to ascii 	
+    ascii_tokens = [unicodeToAscii(token) for token in tokens]    	
+   # stemmer = SnowballStemmer('english', ignore_stopwords=True)
+   # tokens = [stemmer.stem(token) for token in tokens]
+    return ascii_tokens
 
 def remove_escape_sequences(text): 
     #removes escape sequences by only returning printable characters from string
@@ -53,7 +54,31 @@ def remove_escape_sequences(text):
     deletechars  = ''.join(chr(i) for i in xrange(256) if i not in printableords)
     trans_table = dict.fromkeys(deletechars, None)
     clean_text = text.translate(trans_table) 
-    return clean_text 
+    return clean_text
+
+unicodeToAsciiMap = {u'\u2019':"'", u'\u2018':"`", }
+
+def unicodeToAscii(inStr):
+    try:
+        return str(inStr)
+    except:
+        pass
+    outStr = ""
+    for i in inStr:
+        try:
+            outStr = outStr + str(i)
+        except:
+            if unicodeToAsciiMap.has_key(i):
+                outStr = outStr + unicodeToAsciiMap[i]
+            else:
+                try:
+                    #print "unicodeToAscii: add to map:", i, repr(i), "(encoded as _)"
+		    i
+                except:
+                   # print "unicodeToAscii: unknown code (encoded as _)", repr(i)
+ 		    i 
+                outStr = outStr + "_"
+    return outStr 
 
 def add_pos_usage(df):
     #find percentage of verbs, adverbs, nouns, etc. 
@@ -125,10 +150,10 @@ def add_num_09nyms(df):
     return df 
 
 if __name__=='__main__':
-    df = pd.read_pickle('df_age_predict.pkl')
+    df = pd.read_pickle('dataframe_for_eda.pkl')
     df[['title', 'total_text']] = df[['title', 'total_text']].applymap(lambda x: x.decode('ISO-8859-1'))
     df[['title', 'total_text']] = df[['title', 'total_text']].applymap(remove_escape_sequences)
-    df = df.to_pickle('df_age_predict.pkl')
+    df = df.to_pickle('dataframe_for_eda_edited.pkl')
     #identify 09nyms, then add as feature
     #spell correct - account for number of corrections as feature
     #find collocations among total_text
