@@ -33,8 +33,8 @@ def custom_tokenizer(text, bigrams=None):
     chunks = text.split('-')
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
     tokens = tokenizer.tokenize(text)
-    tokens = mwe_tokenize(tokens, bigrams)
-    stemmer = SnowballStemmer('english', ignore_stopwords=True)
+    #tokens = mwe_tokenize(tokens, bigrams)
+    #stemmer = SnowballStemmer('english', ignore_stopwords=True)
     tokens = [stemmer.stem(token) for token in tokens]
     tokens = [subchunk for chunk in chunks for subchunk in tokenizer.tokenize(chunk)]
     tokens = [token for token in tokens if token.isalpha()]
@@ -42,8 +42,8 @@ def custom_tokenizer(text, bigrams=None):
     	tokens = mwe_tokenize(tokens, bigrams)
     #force conversion to ascii 	
     ascii_tokens = [unicodeToAscii(token) for token in tokens]    	
-   # stemmer = SnowballStemmer('english', ignore_stopwords=True)
-   # tokens = [stemmer.stem(token) for token in tokens]
+    stemmer = SnowballStemmer('english', ignore_stopwords=True)
+    tokens = [stemmer.stem(token) for token in tokens]
     return ascii_tokens
 
 def remove_escape_sequences(text): 

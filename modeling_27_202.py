@@ -171,9 +171,9 @@ if __name__=='__main__':
 	
     joblib.dump(gb, 'model_gb.pkl')   
 
-    with open('X_test3.pkl', 'wb') as fid: 
+    with open('X_test_gb.pkl', 'wb') as fid: 
 	cPickle.dump(X_test, fid) 
-    with open('y_test3.pkl', 'wb') as fid: 
+    with open('y_test_gb.pkl', 'wb') as fid: 
 	cPickle.dump(y_test, fid) 
     with open('model_features.pkl', 'wb') as fid:
 	cPickle.dump(features, fid) 
