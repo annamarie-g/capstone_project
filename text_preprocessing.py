@@ -41,10 +41,10 @@ def custom_tokenizer(text, bigrams=None):
     if bigrams:
     	tokens = mwe_tokenize(tokens, bigrams)
     #force conversion to ascii 	
-    ascii_tokens = [unicodeToAscii(token) for token in tokens]    	
+    #ascii_tokens = [unicodeToAscii(token) for token in tokens]    	
     stemmer = SnowballStemmer('english', ignore_stopwords=True)
     tokens = [stemmer.stem(token) for token in tokens]
-    return ascii_tokens
+    return tokens
 
 def remove_escape_sequences(text): 
     #removes escape sequences by only returning printable characters from string

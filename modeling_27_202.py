@@ -29,7 +29,7 @@ def helper_tokenizer(text):
     return tokens 
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = helper_tokenizer, stop_words=tp.custom_stop_words, lowercase=True)
+    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -64,7 +64,7 @@ def random_forest_classifier(X_train, y_train):
     return rfc_gridsearch.best_estimator_
 
 def gradient_boosting(X_train, y_train): 
-    gb = GradientBoostingRegressor(presort = True, learning_rate = 0.075, max_depth = 10, n_estimators = 300, verbose=True, max_features = 15000, random_state=42)
+    gb = GradientBoostingRegressor(presort = True, learning_rate = 0.075, max_depth = 10, n_estimators = 300, verbose=True, max_features = 'sqrt', random_state=42)
     gb.fit_transform(X_train, y_train) 
     return gb 
 
@@ -163,7 +163,7 @@ if __name__=='__main__':
     train_mat, train_features  = create_featurespace(X_train)
 #    total_mat = reduce_dimensions(total_mat, n_topics=10000)
     
-    train_mat, target = shuffle(train_mat, )
+    train_mat, target = shuffle(train_mat,target )
 
     
     gb = gradient_boosting(train_mat.todense(),y_train )
