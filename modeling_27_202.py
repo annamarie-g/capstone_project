@@ -29,7 +29,7 @@ def helper_tokenizer(text):
     return tokens 
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
+    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = helper_tokenizer, stop_words=tp.custom_stop_words, lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -160,7 +160,7 @@ if __name__=='__main__':
     
     X_train, X_test, y_train, y_test = train_test_split(df, target, test_size= 0.3)
 
-    train_mat, train_features  = create_featurespace(x_train)
+    train_mat, train_features  = create_featurespace(X_train)
 #    total_mat = reduce_dimensions(total_mat, n_topics=10000)
     
     train_mat, target = shuffle(train_mat, )
