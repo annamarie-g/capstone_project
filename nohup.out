@@ -1,0 +1,4 @@
+  File "modeling_27_202.py", line 28
+    tokens = tp.custom_tokenizer(text, bigrams[[:100])
+                                                ^
+SyntaxError: invalid syntax

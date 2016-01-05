@@ -14,7 +14,7 @@ from sklearn.cross_validation import train_test_split
 from sklearn.grid_search import GridSearchCV
 from sklearn.svm import LinearSVC, SVC, SVR, LinearSVR
 from sklearn.utils import shuffle 
-
+from sklearn.externals import joblib
 
 def create_collocations_from_trainingset(series):
     #calling for trainingset 
@@ -25,11 +25,11 @@ def helper_tokenizer(text):
     with open('bigrams.pkl', 'rb') as fid:
 	bigrams = cPickle.load(fid)
     
-    tokens = tp.custom_tokenizer(text, bigrams[:150])
+    tokens = tp.custom_tokenizer(text, bigrams[:100])
     return tokens 
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(max_df = 0.40,  min_df = 10, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
+    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=stopwords.words('english'), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -158,22 +158,24 @@ def create_featurespace(df):
 if __name__=='__main__':	
     df, target = get_data()
     
-    total_mat, features  = create_featurespace(df)
+    X_train, X_test, y_train, y_test = train_test_split(df, target, test_size= 0.3)
+
+    train_mat, train_features  = create_featurespace(df)
 #    total_mat = reduce_dimensions(total_mat, n_topics=10000)
     
-    total_mat, target = shuffle(total_mat, target)
-    X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size = 0.3)
+    train_mat, target = shuffle(train_mat, target)
 
     gb = gradient_boosting(X_train.todense(), y_train)
     print 'Gradient Boosted Model:'
     print gb.score(X_test.todense(), y_test) 
-    with open('model2.pkl', 'wb') as fid:
-	cPickle.dump(gb, fid) 
+	
+    joblib.dump(gb, 'model_gb.pkl')   
+
     with open('X_test.pkl', 'wb') as fid: 
 	cPickle.dump(X_test, fid) 
     with open('y_test.pkl', 'wb') as fid: 
 	cPickle.dump(y_test, fid) 
-    with open('features.pkl', 'wb') as fid:
+    with open('model_features.pkl', 'wb') as fid:
 	cPickle.dump(features, fid) 
 '''
     svm_reg = linear_svr(X_train, y_train)
