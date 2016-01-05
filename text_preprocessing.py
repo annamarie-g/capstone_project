@@ -9,6 +9,7 @@ from nltk.tokenize import TweetTokenizer
 from nltk.tokenize.mwe import MWETokenizer
 from nltk.collocations import BigramAssocMeasures, BigramCollocationFinder
 from nltk.collocations import TrigramAssocMeasures, TrigramCollocationFinder
+from nltk.stem.snowball  import SnowballStemmer 
 
 #df.apply is for operations on rows/columns
 #df.applymap is for applying a function elementwise on dataframe 
@@ -28,11 +29,22 @@ def custom_preprocessor(text):
     text = re.sub('[0-9]', ' ', text)
     return text 
 
-def custom_tokenizer(text):
+def custom_tokenizer(text, bigrams=None):
+    chunks = text.split('-')
     tokenizer = TweetTokenizer(reduce_len = True, preserve_case = False)
     tokens = tokenizer.tokenize(text)
-
-    return tokens
+    #tokens = mwe_tokenize(tokens, bigrams)
+    #stemmer = SnowballStemmer('english', ignore_stopwords=True)
+    #tokens = [stemmer.stem(token) for token in tokens]
+    tokens = [subchunk for chunk in chunks for subchunk in tokenizer.tokenize(chunk)]
+    tokens = [token for token in tokens if token.isalpha()]
+    if bigrams:
+    	tokens = mwe_tokenize(tokens, bigrams)
+    #force conversion to ascii 	
+    ascii_tokens = [unicodeToAscii(token) for token in tokens]    	
+    stemmer = SnowballStemmer('english', ignore_stopwords=True)
+    tokens = [stemmer.stem(token) for token in tokens]
+    return ascii_tokens
 
 def remove_escape_sequences(text): 
     #removes escape sequences by only returning printable characters from string
@@ -42,13 +54,39 @@ def remove_escape_sequences(text):
     deletechars  = ''.join(chr(i) for i in xrange(256) if i not in printableords)
     trans_table = dict.fromkeys(deletechars, None)
     clean_text = text.translate(trans_table) 
-    return clean_text 
+    return clean_text
+
+unicodeToAsciiMap = {u'\u2019':"'", u'\u2018':"`", }
+
+def unicodeToAscii(inStr):
+    try:
+        return str(inStr)
+    except:
+        pass
+    outStr = ""
+    for i in inStr:
+        try:
+            outStr = outStr + str(i)
+        except:
+            if unicodeToAsciiMap.has_key(i):
+                outStr = outStr + unicodeToAsciiMap[i]
+            else:
+                try:
+                    #print "unicodeToAscii: add to map:", i, repr(i), "(encoded as _)"
+		    i
+                except:
+                   # print "unicodeToAscii: unknown code (encoded as _)", repr(i)
+ 		    i 
+                outStr = outStr + "_"
+    return outStr 
 
 def add_pos_usage(df):
     #find percentage of verbs, adverbs, nouns, etc. 
     pass
 
 def find_collocations(text_series): 
+    #use stemmed collocations to tokenizer
+    #text_series= text_series.map(custom_tokenizer)
     #use nltk.collocations to find the most commonly occuring bigrams and trigrams
     bigram_measures = BigramAssocMeasures()
     trigram_measures = TrigramAssocMeasures()
@@ -63,14 +101,14 @@ def find_collocations(text_series):
     with open('trigrams.pkl', 'wb') as fid:
         cPickle.dump(scored_trigrams, fid)
 
-def mwe_tokenize(text_series):
+def mwe_tokenize(tokens, bigrams):
     #Retokenizes tokenized text to combine MWEs from list of most common
-    with open('trigrams.pkl', 'rb') as fid:
-        trigrams = cPickle.load(fid) 
+#    with open('bigrams_MWEs.pkl', 'rb') as fid:
+ #       bigrams = cPickle.load(fid) 
 
-    tokenizer = MWETokenizer(trigrams, separator='+')
-    text_series.map(tokenizer)
-    return text_series 
+    tokenizer = MWETokenizer(mwes= bigrams[:100], separator='+')
+    tokens = tokenizer.tokenize(tokens)
+    return tokens 
 
 def normalize(): 
     #add number of corrections as a feature
@@ -112,10 +150,10 @@ def add_num_09nyms(df):
     return df 
 
 if __name__=='__main__':
-    df = pd.read_pickle('df_age_predict.pkl')
+    df = pd.read_pickle('dataframe_for_eda.pkl')
     df[['title', 'total_text']] = df[['title', 'total_text']].applymap(lambda x: x.decode('ISO-8859-1'))
     df[['title', 'total_text']] = df[['title', 'total_text']].applymap(remove_escape_sequences)
-    df = df.to_pickle('df_age_predict.pkl')
+    df = df.to_pickle('dataframe_for_eda_edited.pkl')
     #identify 09nyms, then add as feature
     #spell correct - account for number of corrections as feature
     #find collocations among total_text
