@@ -64,7 +64,7 @@ def random_forest_classifier(X_train, y_train):
     return rfc_gridsearch.best_estimator_
 
 def gradient_boosting(X_train, y_train): 
-    gb = GradientBoostingRegressor(presort = True, learning_rate = 0.075, max_depth = 10, n_estimators = 300, verbose=True, max_features = 'sqrt', random_state=42)
+    gb = GradientBoostingRegressor(learning_rate = 0.1, max_depth = 10, n_estimators = 300, verbose=True, max_features = 2000, random_state=42)
     gb.fit_transform(X_train, y_train) 
     return gb 
 
@@ -163,7 +163,7 @@ if __name__=='__main__':
     train_mat, train_features  = create_featurespace(X_train)
 #    total_mat = reduce_dimensions(total_mat, n_topics=10000)
     
-    train_mat, target = shuffle(train_mat,target )
+#    train_mat, target = shuffle(train_mat,target )
 
     
     gb = gradient_boosting(train_mat.todense(),y_train )
