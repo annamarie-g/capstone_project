@@ -29,7 +29,7 @@ def helper_tokenizer(text):
     return tokens 
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
+    vectorizer = TfidfVectorizer(max_df = 0.85, max_features = 15000, min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -48,7 +48,7 @@ def category_dummies(df):
     return dummies 
 
 def random_forest_regressor(X_train, y_train): 
-    random_forest_grid = {'n_estimators':[x for x in range(150, 300, 50)], 'max_features': ['sqrt', 'log2', '2000']}
+    random_forest_grid = {'n_estimators':[x for x in range(500, 1000, 100)], 'max_features': ['sqrt', 'log2', '2000']}
     rfr_gridsearch = GridSearchCV(RandomForestRegressor(), random_forest_grid, n_jobs = -1, verbose=True)
     rfr_gridsearch.fit(X_train, y_train)
     print "best random forest regressor model:"
@@ -178,7 +178,7 @@ if __name__=='__main__':
     with open('y_test_gb.pkl', 'wb') as fid: 
 	cPickle.dump(y_test, fid) 
     with open('model_features.pkl', 'wb') as fid:
-	cPickle.dump(features, fid) 
+	cPickle.dump(test_features, fid) 
 '''
     svm_reg = linear_svr(X_train, y_train)
     svm_reg.score(X_test, y_test)
