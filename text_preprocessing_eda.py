@@ -38,8 +38,8 @@ def custom_tokenizer(text, bigrams=None):
     #tokens = [stemmer.stem(token) for token in tokens]
     tokens = [subchunk for chunk in chunks for subchunk in tokenizer.tokenize(chunk)]
     tokens = [token for token in tokens if token.isalpha()]
-    if bigrams:
-    	tokens = mwe_tokenize(tokens, bigrams)
+    #if bigrams:
+    tokens = mwe_tokenize(tokens, bigrams)
     #force conversion to ascii 	
 <<<<<<< Updated upstream:text_preprocessing.py
     #ascii_tokens = [unicodeToAscii(token) for token in tokens]    	

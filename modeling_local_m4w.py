@@ -29,11 +29,8 @@ def helper_tokenizer(text):
     return tokens 
  
 def tfidf_matrix(series):
-<<<<<<< Updated upstream:modeling_27_202.py
-    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
-=======
     vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = helper_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
->>>>>>> Stashed changes:modeling_local_m4w.py
+
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -52,7 +49,7 @@ def category_dummies(df):
     return dummies 
 
 def random_forest_regressor(X_train, y_train): 
-    random_forest_grid = {'n_estimators':[x for x in range(150, 300, 50)], 'max_features': ['sqrt', 'log2', '2000']}
+    random_forest_grid = {'n_estimators':[x for x in range(500, 1000, 100)], 'max_features': ['sqrt', 'log2', '2000']}
     rfr_gridsearch = GridSearchCV(RandomForestRegressor(), random_forest_grid, n_jobs = -1, verbose=True)
     rfr_gridsearch.fit(X_train, y_train)
     print "best random forest regressor model:"
@@ -68,11 +65,7 @@ def random_forest_classifier(X_train, y_train):
     return rfc_gridsearch.best_estimator_
 
 def gradient_boosting(X_train, y_train): 
-<<<<<<< Updated upstream:modeling_27_202.py
-    gb = GradientBoostingRegressor(learning_rate = 0.1, max_depth = 10, n_estimators = 300, verbose=True, max_features = 2000, random_state=42)
-=======
     gb = GradientBoostingRegressor(presort = True, learning_rate = 0.075, max_depth = 10, n_estimators = 400, verbose=True, max_features = 'sqrt', random_state=42)
->>>>>>> Stashed changes:modeling_local_m4w.py
     gb.fit_transform(X_train, y_train) 
     return gb 
 
@@ -169,14 +162,6 @@ if __name__=='__main__':
     X_train, X_test, y_train, y_test = train_test_split(df, target, test_size= 0.3)
 
     train_mat, train_features  = create_featurespace(X_train)
-#    total_mat = reduce_dimensions(total_mat, n_topics=10000)
-    
-<<<<<<< Updated upstream:modeling_27_202.py
-#    train_mat, target = shuffle(train_mat,target )
-=======
-    train_mat, target = shuffle(train_mat,target )
->>>>>>> Stashed changes:modeling_local_m4w.py
-
     
     gb = gradient_boosting(train_mat.todense(),y_train )
     print 'Gradient Boosted Model:'
@@ -190,7 +175,7 @@ if __name__=='__main__':
     with open('y_test_gb.pkl', 'wb') as fid: 
 	cPickle.dump(y_test, fid) 
     with open('model_features.pkl', 'wb') as fid:
-	cPickle.dump(features, fid) 
+	cPickle.dump(test_features, fid) 
 '''
     svm_reg = linear_svr(X_train, y_train)
     svm_reg.score(X_test, y_test)
