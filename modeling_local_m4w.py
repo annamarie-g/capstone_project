@@ -29,7 +29,11 @@ def helper_tokenizer(text):
     return tokens 
  
 def tfidf_matrix(series):
+<<<<<<< Updated upstream:modeling_27_202.py
     vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
+=======
+    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = helper_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
+>>>>>>> Stashed changes:modeling_local_m4w.py
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -64,7 +68,11 @@ def random_forest_classifier(X_train, y_train):
     return rfc_gridsearch.best_estimator_
 
 def gradient_boosting(X_train, y_train): 
+<<<<<<< Updated upstream:modeling_27_202.py
     gb = GradientBoostingRegressor(learning_rate = 0.1, max_depth = 10, n_estimators = 300, verbose=True, max_features = 2000, random_state=42)
+=======
+    gb = GradientBoostingRegressor(presort = True, learning_rate = 0.075, max_depth = 10, n_estimators = 400, verbose=True, max_features = 'sqrt', random_state=42)
+>>>>>>> Stashed changes:modeling_local_m4w.py
     gb.fit_transform(X_train, y_train) 
     return gb 
 
@@ -133,7 +141,7 @@ def get_data():
     with open('df_age_predict_edited.pkl', 'rb') as fid:
 	df = cPickle.load(fid)
     #df = pd.concat([training_data[0], training_data[1]], axis=1)
-    #df = df.ix[df['category_code'] == 'm4w', :]
+    df = df.ix[df['category_code'] == 'm4w', :]
     target = df.pop('age')
     return df, target
     
@@ -143,16 +151,16 @@ def create_featurespace(df):
     text_mat, text_features = tfidf_matrix(df['total_text'])
     #create tfidf matrix for titles 
     #title_mat, title_features = tfidf_matrix(df['title'])
-    cat_dummies = category_dummies(df)
+    #cat_dummies = category_dummies(df)
     #create list of features 
     total_features = []
     total_features.extend(text_features)
     #total_features.extend(title_features)
-    total_features.extend(cat_dummies.columns.tolist())	
+    #total_features.extend(cat_dummies.columns.tolist())	
     #add total text length as feature
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
-    total_mat = build_feature_matrix((text_mat, cat_dummies,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
+    total_mat = build_feature_matrix((text_mat,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
     return text_mat, total_features  	
 
 if __name__=='__main__':	
@@ -163,7 +171,11 @@ if __name__=='__main__':
     train_mat, train_features  = create_featurespace(X_train)
 #    total_mat = reduce_dimensions(total_mat, n_topics=10000)
     
+<<<<<<< Updated upstream:modeling_27_202.py
 #    train_mat, target = shuffle(train_mat,target )
+=======
+    train_mat, target = shuffle(train_mat,target )
+>>>>>>> Stashed changes:modeling_local_m4w.py
 
     
     gb = gradient_boosting(train_mat.todense(),y_train )

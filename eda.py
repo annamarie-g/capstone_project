@@ -9,9 +9,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from PIL import Image
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt 
+import text_preprocessing_eda as tp
+import random
 
 def print_top_tokens(model, feature_names, n_top_words, category):
-   with open('results_w4m_10.txt', 'wb') as fid: 
+   with open('results_m4w_4.txt', 'wb') as fid: 
        for topic_idx, topic in enumerate(model.components_):
            fid.write('\n')
 	   fid.write(category)
@@ -42,27 +44,32 @@ def reduce_dimensions(total_mat, n_topics):
     w = nmf.components_ 
     return nmf 
 
+def grey_color_func(word, font_size, position, orientation, random_state=None, **kwargs):
+    return "hsl(0, 0%%, %d%%)" % random.randint(70, 100)
+
 if __name__=='__main__':
     df = get_data()
     mask_path = False
     #Use tfidf features for NMF
     for category in df.category_code.unique().tolist():
-        if category == 'w4m':
+        if category == 'mis':
             #df_cat = df.ix[df['category_code']==category, :]
             text_mat, text_features = md.tfidf_matrix(df.ix[df['category_code'] == category, 'total_text'])
             #Fit NMF
             n_samples = text_mat.shape[0]
             n_features = text_mat.shape[1]
             n_topics = 10 
-            n_top_words = 150
+            n_top_words = 500
             print category 
             print 'Fitting the NMF model with tf-idf features'
             nmf = reduce_dimensions(text_mat, n_topics) 
-            print_top_tokens(nmf,text_features,n_top_words, category)
+            #print_top_tokens(nmf,text_features,n_top_words, category)
 
-            word_freq = topic_word_freq(nmf.components_,6, text_features)
-            wc = WordCloud(background_color='white', max_words=n_top_words, width=1200, height=1200)
+            word_freq = topic_word_freq(nmf.components_, 2, text_features)
+            wc = WordCloud(stopwords=tp.custom_stop_words(), background_color='black', max_words=n_top_words, width=2000, height=1800)
             wc.fit_words(word_freq)
+            plt.figure()
             plt.imshow(wc)
+            #wc.recolor(color_func=grey_color_func, random_state=3)
+            #wc.to_file('background.png')
             plt.axis('off')
-            plt.show()	

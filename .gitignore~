@@ -1,0 +1,4 @@
+#Ignore pkl's
+*.pkl
+*.txt
+*.png
