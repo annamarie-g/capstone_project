@@ -29,7 +29,7 @@ def helper_tokenizer(text):
     return tokens 
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
+    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, max_features = 40000, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -64,9 +64,17 @@ def random_forest_classifier(X_train, y_train):
     return rfc_gridsearch.best_estimator_
 
 def gradient_boosting(X_train, y_train): 
-    gb = GradientBoostingRegressor(learning_rate = 0.1, max_depth = 10, n_estimators = 300, verbose=True, max_features = 2000, random_state=42)
+    gb = GradientBoostingRegressor(learning_rate = 0.1, max_depth = 10, n_estimators = 400, verbose=True, max_features = 2000, random_state=42)
     gb.fit_transform(X_train, y_train) 
     return gb 
+
+def gradient_boosting_grid(X_train, y_train):
+    random_forest_grid = {'n_estimators':[x for x in range(500, 1500,500)], 'max_depth': [x for x in range(3,12,3)], 'learning_rate':[0.01, 0.1, 0.001], 'max_features': ['sqrt', 'log2']}
+    gb_gridsearch = GridSearchCV(GradientBoostingRegressor(), random_forest_grid, n_jobs = -1,  verbose=True)
+    gb_gridsearch.fit(X_train, y_train)
+    print 'best gradient boosting model:'
+    print gb_gridsearch.best_params_
+    return gb_gridsearch.best_estimator_
 
 def svc_rbf(X_train, y_train_clf):
     est = SVC(kernel='rbf', random_state = 42)
@@ -158,28 +166,35 @@ def create_featurespace(df):
 if __name__=='__main__':	
     df, target = get_data()
     
-    X_train, X_test, y_train, y_test = train_test_split(df, target, test_size= 0.3)
 
-    train_mat, train_features  = create_featurespace(X_train)
+    total_mat, total_features  = create_featurespace(df)
 #    total_mat = reduce_dimensions(total_mat, n_topics=10000)
     
-#    train_mat, target = shuffle(train_mat,target )
+    X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size= 0.25)
+
+    print 'testing model...'
 
     
-    gb = gradient_boosting(train_mat.todense(),y_train )
+    gb = gradient_boosting_grid(X_train.todense(),y_train)
     print 'Gradient Boosted Model:'
-    test_mat, test_features = create_featurespace(X_test)
-    print gb.score(test_mat.todense(), y_test) 
-	
+    print gb.score(X_test.todense(), y_test) 
+ 
+'''	
+   predictions = gb.predict(X_test) 
+    with open('gb_predictions.pkl','wb') as fid:
+	cPickle.dump(predictions,fid)
     joblib.dump(gb, 'model_gb.pkl')   
 
     with open('X_test_gb.pkl', 'wb') as fid: 
 	cPickle.dump(X_test, fid) 
     with open('y_test_gb.pkl', 'wb') as fid: 
 	cPickle.dump(y_test, fid) 
+
+    with open('feature_importances.pkl', 'wb') as fid:
+	cPickle.dump(feature_importances, fid)
     with open('model_features.pkl', 'wb') as fid:
-	cPickle.dump(features, fid) 
-'''
+	cPickle.dump(total_features, fid) 
+
     svm_reg = linear_svr(X_train, y_train)
     svm_reg.score(X_test, y_test)
 
