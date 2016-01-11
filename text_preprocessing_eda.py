@@ -38,13 +38,20 @@ def custom_tokenizer(text, bigrams=None):
     #tokens = [stemmer.stem(token) for token in tokens]
     tokens = [subchunk for chunk in chunks for subchunk in tokenizer.tokenize(chunk)]
     tokens = [token for token in tokens if token.isalpha()]
-    if bigrams:
-    	tokens = mwe_tokenize(tokens, bigrams)
+    #if bigrams:
+    tokens = mwe_tokenize(tokens, bigrams)
     #force conversion to ascii 	
+<<<<<<< Updated upstream:text_preprocessing.py
     #ascii_tokens = [unicodeToAscii(token) for token in tokens]    	
     stemmer = SnowballStemmer('english', ignore_stopwords=True)
     tokens = [stemmer.stem(token) for token in tokens]
     return tokens
+=======
+    ascii_tokens = [unicodeToAscii(token) for token in tokens]    	
+    #stemmer = SnowballStemmer('english', ignore_stopwords=True)
+    #tokens = [stemmer.stem(token) for token in tokens]
+    return ascii_tokens
+>>>>>>> Stashed changes:text_preprocessing_eda.py
 
 def remove_escape_sequences(text): 
     #removes escape sequences by only returning printable characters from string
