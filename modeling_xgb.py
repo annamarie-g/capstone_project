@@ -30,12 +30,13 @@ def helper_tokenizer(text):
     return tokens 
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, max_features = 50000, preprocessor = tp.custom_preprocessor, tokenizer = helper_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
-    tfidf_mat = vectorizer.fit_transform(series)
+    tfidf_vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, max_features = 25000, preprocessor = tp.custom_preprocessor, tokenizer = helper_tokenizer, stop_words=tp.custom_stop_words(), lowercase=True)
+    #fit to train data
+    tfidf_vectorizer.fit(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
-    features = vectorizer.get_feature_names()
-    return tfidf_mat, features
+    features = tfidf_vectorizer.get_feature_names()
+    return tfidf_vectorizer, features 
 
 def build_feature_matrix(matrices):
     #Input is tuple of matrices to stack
@@ -148,11 +149,13 @@ def get_data():
     return df, target
     
 
-def create_featurespace(df):
-    #create tfidf matrix for total_text
-    text_mat, text_features = tfidf_matrix(df['total_text'])
-    #create tfidf matrix for titles 
-    #title_mat, title_features = tfidf_matrix(df['title'])
+def create_featurespace(df, tfidf_vectorizer=None):
+    #if you haven't already fit the vectorizer on the training data
+    if tfidf_vectorizer == None:
+	    #create tfidf vectorizer
+	    tfidf_vectorizer, text_features = tfidf_matrix(df['total_text'])
+    #create tfidf matrix for text 
+    tfidf__mat = tfidf_vectorizer.transform(df['total_text'])
     cat_dummies = category_dummies(df)
     #create list of features 
     total_features = []
@@ -162,8 +165,8 @@ def create_featurespace(df):
     #add total text length as feature
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
-    total_mat = build_feature_matrix((text_mat, cat_dummies,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
-    return text_mat, total_features  	
+    train_mat = build_feature_matrix((tfidf_mat, cat_dummies,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
+    return train_mat, total_features, tfidf_vectorizer  	
 
 def xgb_build(X_train, X_test, y_train, y_test): 
 
@@ -199,22 +202,17 @@ def xgb_build(X_train, X_test, y_train, y_test):
     bst.dump_model('dump.raw.txt')
     
 
-
 if __name__=='__main__':	
     df, target = get_data()
+    X_train, X_test, y_train, y_test = train_test_split(df, target, test_size= 0.8)
     
-
-    total_mat, total_features  = create_featurespace(df)
-#    total_mat = reduce_dimensions(total_mat, n_topics=10000)
-    
-    X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size= 0.25)
+    train_mat, train_features, tfidf_vectorizer  = create_featurespace(X_train)
+    test_mat, test_features = create_featurespace(X_test, tfidf_vectorizer)
 
     print 'testing model...'
-    xgb_build(X_train, X_test, y_train, y_test)
+    xgb_build(train_mat, test_mat, y_train, y_test)
 
-
-'''	
-
+'''
     predictions = gb.predict(X_test) 
     with open('gb_predictions.pkl','wb') as fid:
 	cPickle.dump(predictions,fid)
