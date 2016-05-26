@@ -16,31 +16,22 @@ import os
 
 
 def requests_get_trycatch(url):
-    
-    #For debugging purposes-- write url to file 
-    #with open('urls_visited.txt', 'a') as file:
-    #    file.write("'" +url+ "'" + ' , ') 
-
+    #returns requests.get(url) if valid page
     try:
 	r = requests.get(url) 
-	#not a valid url 
 	if r.status_code == 404:    
+    #not a valid url
 	    print 'not a valid url: {}'.format(url)
-	    #raw_input('Press Enter to continue...')
 	elif r.status_code == 403: 
 	    print 'You are blocked on this IP'
 	    exit()
-    except: #this is when there is an issue with the proxy 
+    except:  
         exit()
-    #Once I am able to get a valid response, it doesn't really matter whether I return session because this is the end product for each session variable created  
     return r 
 
 def write_remaining_to_dict(locations):
-    #will just rescrape remaining of category in new scrape - using locations dictionary that has each location removed as scrape is completed... 
-    #don't need to call this function, 
-	
-    #overwrite existing file - will iteratively work its way down
-
+    #creates json of locations that have not been scraped. Can restart scraper
+    #overwrites existing file 
     with open('regions/remaining_{}.json'.format(table_name), 'wb') as fp:
         json.dump(locations, fp) 
 
@@ -272,6 +263,7 @@ if __name__=='__main__':
     #prompt user to select region
     region = select_region()
     category = select_category() 
+
 
     #Define the MongoDB database and table 
     db_client = MongoClient()
