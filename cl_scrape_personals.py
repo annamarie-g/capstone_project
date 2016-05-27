@@ -16,7 +16,7 @@ import os
 
 
 def requests_get_trycatch(url):
-    #returns requests.get(url) if valid page
+    """returns requests.get(url) if valid page"""
     try:
 	r = requests.get(url) 
 	if r.status_code == 404:    
@@ -30,8 +30,8 @@ def requests_get_trycatch(url):
     return r 
 
 def write_remaining_to_dict(locations):
-    #creates json of locations that have not been scraped. Can restart scraper
-    #overwrites existing file 
+    """creates json of locations that have not been scraped. Can restart scraper
+       overwrites existing file"""
     with open('regions/remaining_{}.json'.format(table_name), 'wb') as fp:
         json.dump(locations, fp) 
 
@@ -47,11 +47,14 @@ def load_dicts(location_dict, category_dict):
     return locations, location_tuples, category_tuples  
 
 def select_region():
+    """prompts user to select region from regions/ directory
+       returns region name (str) selected by user"""
     regions = []
     for f in os.listdir(os.getcwd() + '/regions'):
         if f.endswith('.json'):
             regions.append(f[:-5])
-    
+   
+   #prompt user
     region = ''
     while region not in regions: 
         print 'Regions:' 
@@ -60,12 +63,14 @@ def select_region():
     return region 
 
 def select_category():
-
+    """prompts user to select category from categories/personals/ directory
+       returns category name (str) selected by user"""
     categories = []
     for f in os.listdir(os.getcwd() + '/categories/personals/'):
         if f.endswith('.json'):
             categories.append(f[:-5])
     
+    #prompt user
     category  = ''
     while category not in categories:
         print 'Categories:'
@@ -74,46 +79,47 @@ def select_category():
     return category
 
 def category_page_urls(location_tuple, category_tuple):
-    #Returns list of category page urls for location and category
-
+    """Returns list of category page urls for location and category"""
     location_href = location_tuple[2]
     base_url = '{}/search/{}'.format(location_href, category_tuple[0]) 
 
-    #get a response to see total page count 
+    #get total page count 
     resp = requests_get_trycatch(base_url)
     soup = BeautifulSoup(resp.content)
     total_posted = soup.find('span', {'class':'totalcount'})
     if total_posted: 
     	total = int(soup.find('span', {'class':'totalcount'}).text)
-    	#calculate upper bound of postings so that you only scrape pages that you need to 
+    	#calculate upper bound of postings
     	upperbnd = total - (total%100)
     else: 
-	#upperbnd = 2400 means there are no postings
+	#upperbnd == 2400 means there are no postings
         return []
 
     page_urls = ['{}?s={}'.format(base_url, page_index) for page_index in range(upperbnd, -100, -100)]
     return page_urls 
 
 def posting_urls(location_tuple, category_tuple, item_hrefs):
-	#Returns list of posting urls given list of item hrefs from category page scrape 
+	"""Returns list of posting urls given list of item hrefs from category page scrape"""
     location_href = location_tuple[2]
-    #item_urls = [location_href + href if ('craigslist.ca' not in href and 'craigslist.mx' not in href) else 'http:' + href for href in item_hrefs]
     item_urls = [location_href + href for href in item_hrefs if ('craigslist.ca' not in href) and ('craigslist.mx' not in href)] 
     return item_urls 
 
 def scrape_category_page(url):
+    """Scrapes category page given url. Returns list of item hrefs """
     resp = requests_get_trycatch(url) 
     if not resp: #r is false,    
         return []
     soup = BeautifulSoup(resp.content)
     items = soup.find_all('a', {'class':'i'}, href=True)
-   # items_with_age = [item['href'] for item in items if (item.find('span') and ('craigslist.org' not in item['href']))]
     #if href contains craigslist them it is a redirect to a posting at another location 
     item_hrefs = [item['href'] for item in items if 'craigslist.' not in item['href']]
     
     return item_hrefs
 
 def scrape_personals_posting((location_tuple, category_tuple, url)):
+    """Scrapes personals posting given location tuple, category tuple, and url.
+       Stores scraped information to dictionary. 
+       Inserts dictionary to globally defined mongodb table"""
     #slight pause 
     time.sleep(1)
     post_dict = defaultdict() 
@@ -123,18 +129,20 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
         return post_dict
 
     soup = BeautifulSoup(resp.text)
-    
+
+    #posting was removed
     if soup.find('div', {'class':'removed'}):
         return []
 
+    #record if repost
     repost_index = soup.text.find('repost_of = ')
-    if repost_index !=-1:#it is a repost 
+    if repost_index !=-1: #repost 
         repost_value_index = repost_index + len('repost_of = ')
         post_dict['repost_of'] = soup.text[repost_value_index:repost_value_index+10]
 
     #Posting Body 
     post_dict['posting_body'] = soup.find('section', {'id':'postingbody'}).text 
-    #check to see if post has been deleted 
+    #check if post was deleted
     if ('This posting has been deleted by its author.' or 'This posting has been flagged for removal.') in post_dict['posting_body']:
         return post_dict 
 
@@ -145,15 +153,14 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
     post_dict['category_code'] = category_tuple[0]
     post_dict['category_title'] = category_tuple[1] 
 
+    #Title
     title_block  = soup.find('span', {'class':'postingtitletext'})
     if title_block:
 	post_dict['title'] = title_block.text 	
     
-    	#if there is a subtitle
     	subtitle = title_block.find('small')
     	if subtitle:
             post_dict['area'] = subtitle.text
-	    #if there is a subtitle, remove it from the title and replace title
 	    post_dict['title'] = post_dict['title'].replace(subtitle.text, '')
 	    
     #Number of images 
@@ -178,7 +185,6 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
         chain = itertools.chain(*attributes)
         attributes = list(chain)
         for attribute in attributes: 
-            #only add attribute to dictionary is there is a value given  
             attribute_value = attribute.find('b')
             #only if attribute value given create attribute name
             if attribute_value: 
@@ -208,9 +214,8 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
 
 
 def scrape_category_pages_concurrent(cat_page_urls):
-    #creates thread for each of 24 category pages and scrapes item hrefs concurrently
+    """Creates thread for each of 24 category pages and scrape item hrefs concurrently"""
     cat_threadpool = ThreadPool(4)
-    #originally I had a session variable shared among all threads and then I realized I was an idiot 
     #args = list(itertools.izip(cat_page_urls, itertools.repeat(session)))
     results = cat_threadpool.map(scrape_category_page, cat_page_urls)
     cat_threadpool.close()
@@ -263,7 +268,6 @@ if __name__=='__main__':
     #prompt user to select region
     region = select_region()
     category = select_category() 
-
 
     #Define the MongoDB database and table 
     db_client = MongoClient()
