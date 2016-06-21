@@ -31,7 +31,8 @@ def requests_get_trycatch(url):
 
 def write_remaining_to_dict(locations):
     """creates json of locations that have not been scraped. Can restart scraper
-       overwrites existing file"""
+       overwrites existing file
+    """   
     with open('regions/remaining_{}.json'.format(table_name), 'wb') as fp:
         json.dump(locations, fp) 
 
@@ -48,7 +49,8 @@ def load_dicts(location_dict, category_dict):
 
 def select_region():
     """prompts user to select region from regions/ directory
-       returns region name (str) selected by user"""
+       returns region name (str) selected by user.
+    """
     regions = []
     for f in os.listdir(os.getcwd() + '/regions'):
         if f.endswith('.json'):
@@ -64,7 +66,8 @@ def select_region():
 
 def select_category():
     """prompts user to select category from categories/personals/ directory
-       returns category name (str) selected by user"""
+       returns category name (str) selected by user.
+    """
     categories = []
     for f in os.listdir(os.getcwd() + '/categories/personals/'):
         if f.endswith('.json'):
@@ -119,7 +122,8 @@ def scrape_category_page(url):
 def scrape_personals_posting((location_tuple, category_tuple, url)):
     """Scrapes personals posting given location tuple, category tuple, and url.
        Stores scraped information to dictionary. 
-       Inserts dictionary to globally defined mongodb table"""
+       Inserts dictionary to globally defined mongodb table
+    """
     #slight pause 
     time.sleep(1)
     post_dict = defaultdict() 
@@ -214,31 +218,31 @@ def scrape_personals_posting((location_tuple, category_tuple, url)):
 
 
 def scrape_category_pages_concurrent(cat_page_urls):
-    """Creates thread for each of 24 category pages and scrape item hrefs concurrently"""
+    """Creates thread for each of 24 category pages and scrapes item hrefs concurrently.
+       Returns nested list of hrefs. 
+    """
     cat_threadpool = ThreadPool(4)
-    #args = list(itertools.izip(cat_page_urls, itertools.repeat(session)))
     results = cat_threadpool.map(scrape_category_page, cat_page_urls)
     cat_threadpool.close()
     cat_threadpool.join() 
-    #nested list (each list is 100 hrefs)
+    #each list is 100 hrefs
     return results 
 
 def scrape_hrefs_concurrent(location_tuple, category_tuple, posting_urls):
-    #takes list of posting urls and scrapes each
-
-    #create list of argument tuples 
+    """Takes list of posting urls and scrapes each concurrently"""
     args = list(itertools.izip(itertools.repeat(location_tuple), itertools.repeat(category_tuple),posting_urls))
     post_threadpool = ThreadPool(4) 
+    #scrape_personals_posting inserts to mongodb table
     results = post_threadpool.map(scrape_personals_posting,args)  
     post_threadpool.close()
     post_threadpool.join() 
-    #scrape_posting inserts into mongo, no need to return 
 
 def scrape_concurrent(locations, location_tuples, category_tuples):
-    #Scrapes all postings for each location/category pair
-	#threadpool for scraping 24 category pages 
-	#threadpool for scraping set of hrefs from category pages
-    
+    """Scrapes all postings for each location/category pair.
+       Calls scrape_category_pages_concurrent to scrape hrefs from category pages. 
+       Removes location tuple as location is scraped
+   """
+
     for location_tuple in location_tuples:
         print location_tuple 
         
@@ -258,8 +262,9 @@ def scrape_concurrent(locations, location_tuples, category_tuples):
     	write_remaining_to_dict(locations)	
 
 def export_table():
-    #called when scrape is finished, or when scrape gets interrupted 
-    #export table to mongo after scrape
+    """Called when scrape is finished, or when scrape gets interrupted 
+       export table to mongo after finished 
+    """
     output_fp = 'data/loc_cat_scrape/{}'.format(table_name) + '.json'
     os.system('mongoexport --db {} --collection {} --jsonArray --out {}'.format(db_name, table_name, output_fp))
 

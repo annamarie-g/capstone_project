@@ -91,12 +91,13 @@ def get_english_posts(df):
     return df 
 
 def num_attributes(df):
-    #sum of the number of user supplied attributes
+    """Sum of the number of user provided attributes."""
     attributes = df[['zodiac', 'weight', 'status', 'kids, want', 'general', 'body', 'body art', 'diet', 'dislikes', 'education', 'ethnicity', 'eye color', 'facial hair', 'fears', 'hair', 'stds', 'interests', 'kids, have', 'likes', 'native language', 'occupation', 'personality','pets', 'politics', 'religion', 'resembles', 'drugs', 'drinks']].notnull()    
     df['num_attributes'] = attributes.apply(sum, axis=1)
     return df 
 
 def drop_stuff(df):
+    """Drops unneccessary columns in dataframe.""" 
     df.columns = [col.rstrip() for col in df.columns.values.tolist()]
     #drops duplicate urls
     df.drop_duplicates('url', inplace=True)
@@ -116,22 +117,24 @@ def drop_stuff(df):
     return df 
 
 def combine_stds(df):
+    """Combines std columns into one boolean column."""
     df.drop(['/hsv/hpv','hiv/', 'hiv//hpv', 'hiv/hsv/'],axis=1, inplace = True )
     df.rename(columns={'hiv/hsv/hpv':'stds'}, inplace=True)
     return df
 
 def time_str_to_datetime(df): 
+    """Converts string time column to datetime object""" 
     df['post_time'] = df['post_time'].apply(dateutil.parser.parse) 
     #for updated time, need to apply only to non null values 
 #    df['post_updated_time'] = df['post_updated_time'].apply(dateutil.parser.parse) 
     df['time'] = df['post_time'].apply(lambda x: x.time())
  #   df['post_updated_time_of_day'] = df['post_updated_time'].apply(lambda x: x.time())
-    
     df['day'] = df['post_time'].apply(lambda x: x.date()) 
     df['weekday'] = df['post_time'].apply(lambda x: x.weekday()) 
     return df
 
 if __name__=='__main__':
+    
     df = pd.read_pickle('raw_dataframe.pkl')
     pd.set_option('max_colwidth', pd.util.terminal.get_terminal_size()[0])
     df = drop_stuff(df) 

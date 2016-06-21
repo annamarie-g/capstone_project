@@ -1,3 +1,4 @@
 #Capstone Project
 
-Currently a work in progress! Come back soon! 
+Scraper for US craiglist personals postings. 
+

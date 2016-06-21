@@ -160,8 +160,6 @@ if __name__=='__main__':
     #y_train_clf = create_age_groups(y_train)
     #y_test_clf = create_age_groups(y_test)	
 
-
-
 '''
     rfr = random_forest_regressor(X_train, y_train)
     print "Best Random Forest Regressor R^2:"
