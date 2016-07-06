@@ -1,4 +1,4 @@
-import numpy as np
+idfaimport numpy as np
 import scipy as sc
 import pandas as pd 
 import cPickle
@@ -14,19 +14,21 @@ from sklearn.cross_validation import train_test_split
 from sklearn.grid_search import GridSearchCV
 from sklearn.svm import LinearSVC, SVC, SVR, LinearSVR
 
-
 def create_collocations_from_trainingset(series):
     #calling for trainingset 
     scored_bigrams, scored_trigrams =tp.find_collocations(series)
     return scored_bigrams, scored_trigrams
 
 def custom_stop_words():
+    """Returns list of custom stop words that include english stop words and words that may indicate numeric age"""
     stop_words = stopwords.words('english')
     age = ['twenty', 'twenties', 'thirty', 'thirties', 'forty', 'fourty', 'fourties', 'forties', 'fifties', 'fifty', 'sixties', 'sixty', 'seventies', 'seventy', 'eighties', 'eighty', 'ninety', 'nineties', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'eighteen', 'nineteen']
     stop_words.extend(age)
     return stop_words
  
 def tfidf_matrix(series):
+    """Creates tfidf matrix from text series. 
+       Returns tfidf matrix and feature set."""
     vectorizer = TfidfVectorizer(max_df = 0.85, min_df = 2, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=custom_stop_words(), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
@@ -132,7 +134,6 @@ def get_data():
     target = df.pop('age')
     return df, target
     
-
 def create_featurespace(df):
     #create tfidf matrix for total_text
     text_mat, text_features = tfidf_matrix(df['total_text'])

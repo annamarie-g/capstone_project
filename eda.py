@@ -13,21 +13,24 @@ import text_preprocessing_eda as tp
 import random
 
 def print_top_tokens(model, feature_names, n_top_words, category):
-   with open('results_m4w_4.txt', 'wb') as fid: 
+    """
+    Prints top words for category to text file 
+    """
+    with open('results_m4w_4.txt', 'wb') as fid: 
        for topic_idx, topic in enumerate(model.components_):
-           fid.write('\n')
-	   fid.write(category)
-	   fid.write('\n')
-	   fid.write("Topic #%d:" % topic_idx)
-	   fid.write(' '.join([feature_names[i] for i in topic.argsort()[:-n_top_words -1:-1]]))
-	   #fid.write('\n')
-	   #fid.write( for i in topic.argsort()[:-n_top_words -1:-1]])
-	   fid.write('\n')
+       fid.write('\n')
+       fid.write(category)
+       fid.write('\n')
+       fid.write("Topic #%d:" % topic_idx)
+       fid.write(' '.join([feature_names[i] for i in topic.argsort()[:-n_top_words -1:-1]]))
+       #fid.write('\n')
+       #fid.write( for i in topic.argsort()[:-n_top_words -1:-1]])
+       fid.write('\n')
 
 def topic_word_freq(topics, idx, feature_names): 
-	freq_sum = np.sum(topics[idx]) 	
-	frequencies =  [val/freq_sum for val in topics[idx]] 
-	return zip(feature_names, frequencies) 
+    freq_sum = np.sum(topics[idx]) 	
+    frequencies =  [val/freq_sum for val in topics[idx]] 
+    return zip(feature_names, frequencies) 
 
 def get_data():
     with open('dataframe_for_eda.pkl', 'rb') as fid:
