@@ -28,23 +28,33 @@ def print_top_tokens(model, feature_names, n_top_words, category):
        fid.write('\n')
 
 def topic_word_freq(topics, idx, feature_names): 
+    """
+    Calculates word frequencies 
+    Returns iterator of tuples
+    """
     freq_sum = np.sum(topics[idx]) 	
     frequencies =  [val/freq_sum for val in topics[idx]] 
     return zip(feature_names, frequencies) 
 
 def get_data():
+    """
+    Reads pandas dataframe from .pkl
+    Returns dataframe
+    """
     with open('dataframe_for_eda.pkl', 'rb') as fid:
 	df = cPickle.load(fid)
     return df
 
 def reduce_dimensions(total_mat, n_topics):
-    #input is data matrix, shape (n_samples, n_features)
+    """
+    Calculates and returns nmf 
+    Input is data matrix, shape (n_samples, n_features)
     #returns W array, shape (n_samples, n_components)
-    
+    """
     nmf = NMF(n_components = n_topics, random_state=42, alpha=.2,  l1_ratio=0.5)
     nmf.fit(total_mat)
-    X = nmf.transform(total_mat) 
-    w = nmf.components_ 
+    #X = nmf.transform(total_mat) 
+    #w = nmf.components_ 
     return nmf 
 
 def grey_color_func(word, font_size, position, orientation, random_state=None, **kwargs):
