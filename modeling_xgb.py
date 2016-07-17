@@ -254,6 +254,6 @@ if __name__=='__main__':
 
     gb = gradient_boosting(X_train.todense(), y_train)
     print 'Gradient Boosted Model:'
-    print gb.score(X_train, y_train) 
+    print gb.score(X_test, y_test) 
 
 '''
