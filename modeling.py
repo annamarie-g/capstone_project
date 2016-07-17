@@ -13,18 +13,19 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.cross_validation import train_test_split 
 from sklearn.grid_search import GridSearchCV
 from sklearn.svm import LinearSVC, SVC, SVR, LinearSVR
+from sklearn.utils import shuffle 
+from sklearn.externals import joblib
 
 def create_collocations_from_trainingset(series):
     #calling for trainingset 
     scored_bigrams, scored_trigrams =tp.find_collocations(series)
     return scored_bigrams, scored_trigrams
 
-def custom_stop_words():
-    """Returns list of custom stop words that include english stop words and words that may indicate numeric age"""
-    stop_words = stopwords.words('english')
-    age = ['twenty', 'twenties', 'thirty', 'thirties', 'forty', 'fourty', 'fourties', 'forties', 'fifties', 'fifty', 'sixties', 'sixty', 'seventies', 'seventy', 'eighties', 'eighty', 'ninety', 'nineties', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'eighteen', 'nineteen']
-    stop_words.extend(age)
-    return stop_words
+def helper_tokenizer(text):
+    with open('bigrams.pkl', 'rb') as fid:
+	bigrams = cPickle.load(fid)
+    tokens = tp.custom_tokenizer(text, bigrams[:100])
+    return tokens 
  
 def tfidf_matrix(series):
     """Creates tfidf matrix from text series. 
@@ -48,17 +49,16 @@ def category_dummies(df):
     return dummies 
 
 def random_forest_regressor(X_train, y_train): 
-    #random_forest_grid = {'n_estimators':[x for x in range(150, 300, 50)], 'max_features': ['sqrt', 'log2']}
-    #rfr_gridsearch = GridSearchCV(RandomForestRegressor(), random_forest_grid, n_jobs = -1, verbose=True, cv=2)
-    #rfr_gridsearch.fit(X_train, y_train)
-    #print "best random forest regressor model:"
-    #print rfr_gridsearch.best_params_
-    #return rfr_gridsearch.best_estimator_
-    rfr = RandomForestRegressor(n_estimators = 250, max_features = 2000, n_jobs = -1, verbose = True)
-    rfr.fit_transform(X_train, y_train)
-    return rfr 
-
+    random_forest_grid = {'n_estimators':[x for x in range(500, 1000, 100)], 'max_features': ['sqrt', 'log2', '2000']}
+    rfr_gridsearch = GridSearchCV(RandomForestRegressor(), random_forest_grid, n_jobs = -1, verbose=True)
+    rfr_gridsearch.fit(X_train, y_train)
+    print "best random forest regressor model:"
+    print rfr_gridsearch.best_params_
+    return rfr_gridsearch.best_estimator_
 def random_forest_classifier(X_train, y_train):
+    """
+    Classifies age group 
+    """ 
     random_forest_grid = {'n_estimators':[x for x in range(50, 400, 50)], 'max_features': ['sqrt', 'log2', 'auto', '250', '500', '1000', '2000']}
     rfc_gridsearch = GridSearchCV(RandomForestClassifier(), random_forest_grid, n_jobs = -1,  verbose=True)
     rfc_gridsearch.fit(X_train, y_train)
@@ -67,7 +67,7 @@ def random_forest_classifier(X_train, y_train):
     return rfc_gridsearch.best_estimator_
 
 def gradient_boosting(X_train, y_train): 
-    gb = GradientBoostingRegressor(max_features = 'sqrt', random_state=42)
+    gb = GradientBoostingRegressor(presort = True, learning_rate = 0.075, max_depth = 10, n_estimators = 400, verbose=True, max_features = 'sqrt', random_state=42)
     gb.fit_transform(X_train, y_train) 
     return gb 
 
@@ -109,9 +109,9 @@ def linear_svc(X_train, y_train_clf):
 
 def linear_svr(X_train, y_train):
     #linear support vector classification
-    parameters = {'C': [0.0001,.005, 0.1, 10,  100]}
-    est = LinearSVR()
-    clf = GridSearchCV(est, parameters, cv=2, n_jobs = -1, verbose = True) 
+    parameters = {'C': [0.0001,.005, 0.1, 100], 'loss':['l1', 'l2']}
+    est = LinearSVR(verbose=True)
+    clf = GridSearchCV(est, parameters, cv=2, n_jobs = -1) 
     clf.fit(X_train, y_train)
     print 'best model:'
     print clf.best_estimator_
@@ -126,10 +126,16 @@ def create_age_groups(series):
     age_group = pd.cut(series, range(5,95,10), right=False, labels = ["{0} - {1}".format(i, i+9) for i in range(5, 85, 10)])
     return age_group
 
+def reduce_dimensions(total_mat, n_topics):
+    #input is data matrix, shape (n_samples, n_features)
+    #returns W array, shape (n_samples, n_components)
+    nmf = NMF(n_components=n_topics, random_state=42)
+    nmf.fit_transform(total_mat)
+    return nmf
+
 def get_data():
     with open('df_age_predict_edited.pkl', 'rb') as fid:
 	df = cPickle.load(fid)
-    #df = pd.concat([training_data[0], training_data[1]], axis=1)
     #df = df.ix[df['category_code'] == 'mis', :]
     target = df.pop('age')
     return df, target
@@ -149,7 +155,7 @@ def create_featurespace(df):
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
     total_mat = build_feature_matrix((text_mat, cat_dummies,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
-    return total_mat 	
+    return total_mat, total_features  	
 
 if __name__=='__main__':	
     df, target = get_data()
@@ -161,6 +167,19 @@ if __name__=='__main__':
     #y_train_clf = create_age_groups(y_train)
     #y_test_clf = create_age_groups(y_test)	
 
+    train_mat, train_features  = create_featurespace(X_train)
+    
+    gb = gradient_boosting(train_mat.todense(),y_train )
+    print 'Gradient Boosted Model:'
+    test_mat, test_features = create_featurespace(X_test)
+    print gb.score(test_mat.todense(), y_test) 
+	
+    joblib.dump(gb, 'model_gb.pkl')   
+	cPickle.dump(X_test, fid) 
+    with open('y_test_gb.pkl', 'wb') as fid: 
+	    cPickle.dump(y_test, fid) 
+    with open('model_features.pkl', 'wb') as fid:
+	    cPickle.dump(test_features, fid) 
 '''
     rfr = random_forest_regressor(X_train, y_train)
     print "Best Random Forest Regressor R^2:"
@@ -193,4 +212,13 @@ if __name__=='__main__':
     gb = gradient_boosting(X_train.todense(), y_train)
     print 'Gradient Boosted Model:'
     print gb.score(X_test, y_test) 
-'''
+
+ #eate age group on y_train and y_test 
+    y_train_clf = create_age_groups(y_train)
+    y_test_clf = create_age_groups(y_test)	
+
+    rfr = random_forest_regressor(X_train, y_train)
+    rfr.transform(X_train, y_train)
+    print "Best Random Forest Regressor R^2:"
+    print rfr.score(X_test, y_test)
+"""

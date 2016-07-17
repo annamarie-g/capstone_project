@@ -28,8 +28,9 @@ def helper_tokenizer(text):
     return tokens 
  
 def tfidf_matrix(series):
-    vectorizer = TfidfVectorizer(max_df = 0.85,  min_df = 5, preprocessor = tp.custom_preprocessor, tokenizer = helper_tokenizer, stop_words=tp.custom_stop_words('english'), lowercase=True)
-
+    """Creates tfidf matrix from text series. 
+       Returns tfidf matrix and feature set."""
+    vectorizer = TfidfVectorizer(max_df = 0.85, min_df = 2, preprocessor = tp.custom_preprocessor, tokenizer = tp.custom_tokenizer, stop_words=custom_stop_words(), lowercase=True)
     tfidf_mat = vectorizer.fit_transform(series)
 	#create tfidf matrix from series  
     #create reverse lookup of tokens 
@@ -132,8 +133,7 @@ def reduce_dimensions(total_mat, n_topics):
 def get_data():
     with open('df_age_predict_edited.pkl', 'rb') as fid:
 	df = cPickle.load(fid)
-    #df = pd.concat([training_data[0], training_data[1]], axis=1)
-    df = df.ix[df['category_code'] == 'm4w', :]
+    #df = df.ix[df['category_code'] == 'mis', :]
     target = df.pop('age')
     return df, target
     
@@ -141,21 +141,29 @@ def get_data():
 def create_featurespace(df):
     #create tfidf matrix for total_text
     text_mat, text_features = tfidf_matrix(df['total_text'])
+    #create tfidf matrix for titles 
+    #title_mat, title_features = tfidf_matrix(df['title'])
     cat_dummies = category_dummies(df)
     #create list of features 
     total_features = []
     total_features.extend(text_features)
+    #total_features.extend(title_features)
     total_features.extend(cat_dummies.columns.tolist())	
     #add total text length as feature
     df['total_text_length'] = df['total_text'].map(len)
     #combine matrices 
-    total_mat = build_feature_matrix((text_mat,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
-    return text_mat, total_features  	
+    total_mat = build_feature_matrix((text_mat, cat_dummies,  np.array(df[['num_attributes', 'num_images', 'total_text_length']])))
+    return total_mat, total_features  	
 
 if __name__=='__main__':	
     df, target = get_data()
-    
-    X_train, X_test, y_train, y_test = train_test_split(df, target, test_size= 0.3)
+    total_mat = create_featurespace(df)
+
+    X_train, X_test, y_train, y_test = train_test_split(total_mat, target, test_size = 0.3)
+
+    #create age group on y_train and y_test 
+    #y_train_clf = create_age_groups(y_train)
+    #y_test_clf = create_age_groups(y_test)	
 
     train_mat, train_features  = create_featurespace(X_train)
     
@@ -170,7 +178,11 @@ if __name__=='__main__':
 	    cPickle.dump(y_test, fid) 
     with open('model_features.pkl', 'wb') as fid:
 	    cPickle.dump(test_features, fid) 
-'''
+"""
+    rfr = random_forest_regressor(X_train, y_train)
+    print "Best Random Forest Regressor R^2:"
+    print rfr.score(X_test, y_test)
+
     svm_reg = linear_svr(X_train, y_train)
     svm_reg.score(X_test, y_test)
 
@@ -197,9 +209,9 @@ if __name__=='__main__':
 
     gb = gradient_boosting(X_train.todense(), y_train)
     print 'Gradient Boosted Model:'
-    print gb.score(X_test, y_test) 
+    print gb.score(X_test, y_test)
 
-    #create age group on y_train and y_test 
+ #eate age group on y_train and y_test 
     y_train_clf = create_age_groups(y_train)
     y_test_clf = create_age_groups(y_test)	
 
@@ -207,5 +219,4 @@ if __name__=='__main__':
     rfr.transform(X_train, y_train)
     print "Best Random Forest Regressor R^2:"
     print rfr.score(X_test, y_test)
-
-'''
+"""
