@@ -227,33 +227,4 @@ if __name__=='__main__':
 	cPickle.dump(feature_importances, fid)
     with open('model_features.pkl', 'wb') as fid:
 	cPickle.dump(total_features, fid) 
-
-    svm_reg = linear_svr(X_train, y_train)
-    svm_reg.score(X_test, y_test)
-
-    reg = svr_rbf(X_train, y_train)
-    print 'Best svc classifier accuracy:' 
-    print reg.score(X_test, y_test) 
-
-    clf = svc_rbf(X_train, y_train_clf)
-    print 'Best svc classifier accuracy:' 
-    print clf.score(X_test, y_test_clf) 
-
-    rfc = random_forest_classifier(X_train, y_train_clf)
-    rfc.transform(X_train, y_train_clf)
-    print "Best Random Forest Classifier Accuracy:"
-    print rfc.score(X_test, y_test_clf)
-	
-    rfr = random_forest_regressor(X_train, y_train)
-    rfr.transform(X_train, y_train)
-    print "Best Random Forest Regressor R^2:"
-    print rfr.score(X_test, y_test)
-
-    svm_clf = linear_svc(X_train, y_train_clf)
-    svm_clf.score(X_test, y_test_clf)
-
-    gb = gradient_boosting(X_train.todense(), y_train)
-    print 'Gradient Boosted Model:'
-    print gb.score(X_test, y_test) 
-
 '''

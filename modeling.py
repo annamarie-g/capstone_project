@@ -55,6 +55,7 @@ def random_forest_regressor(X_train, y_train):
     print "best random forest regressor model:"
     print rfr_gridsearch.best_params_
     return rfr_gridsearch.best_estimator_
+
 def random_forest_classifier(X_train, y_train):
     """
     Classifies age group 
@@ -73,7 +74,6 @@ def gradient_boosting(X_train, y_train):
 
 def svc_rbf(X_train, y_train_clf):
     est = SVC(kernel='rbf', random_state = 42)
-
     clf = GridSearchCV(est, parameters, cv=2, n_jobs=-1)
     clf.fit(X_train, y_train_clf)
     print 'Best SVC estimator:'
@@ -139,7 +139,7 @@ def get_data():
     #df = df.ix[df['category_code'] == 'mis', :]
     target = df.pop('age')
     return df, target
-    
+
 def create_featurespace(df):
     #create tfidf matrix for total_text
     text_mat, text_features = tfidf_matrix(df['total_text'])
@@ -180,7 +180,7 @@ if __name__=='__main__':
 	    cPickle.dump(y_test, fid) 
     with open('model_features.pkl', 'wb') as fid:
 	    cPickle.dump(test_features, fid) 
-'''
+"""
     rfr = random_forest_regressor(X_train, y_train)
     print "Best Random Forest Regressor R^2:"
     print rfr.score(X_test, y_test)
@@ -209,11 +209,7 @@ if __name__=='__main__':
     svm_clf = linear_svc(X_train, y_train_clf)
     svm_clf.score(X_test, y_test_clf)
 
-    gb = gradient_boosting(X_train.todense(), y_train)
-    print 'Gradient Boosted Model:'
-    print gb.score(X_test, y_test) 
-
- #eate age group on y_train and y_test 
+    #Create age group on y_train and y_test 
     y_train_clf = create_age_groups(y_train)
     y_test_clf = create_age_groups(y_test)	
 
